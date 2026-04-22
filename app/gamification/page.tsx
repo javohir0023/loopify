@@ -102,7 +102,7 @@ export default function GamificationPage() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className={challenge.completed ? '✅' : '⭕'}</span>
+                    <span className="text-xl">{challenge.completed ? '✅' : '⭕'}</span>
                     <div>
                       <h3 className="font-bold text-foreground">{challenge.title}</h3>
                       <p className="text-xs text-muted-foreground">+{challenge.xp} XP</p>

@@ -28,7 +28,6 @@ const defaultOnboarding: OnboardingData = {
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<OnboardingData>(defaultOnboarding);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -41,7 +40,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         console.error('Failed to parse onboarding data:', e);
       }
     }
-    setIsLoaded(true);
   }, []);
 
   const updateData = (partial: Partial<OnboardingData>) => {
@@ -54,10 +52,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setData(defaultOnboarding);
     localStorage.removeItem('loopify-onboarding');
   };
-
-  if (!isLoaded) {
-    return <>{children}</>;
-  }
 
   return (
     <OnboardingContext.Provider value={{ data, updateData, resetOnboarding }}>

@@ -39,7 +39,6 @@ const defaultProgress: UserProgress = {
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<UserProgress>(defaultProgress);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -52,7 +51,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to parse user progress:', e);
       }
     }
-    setIsLoaded(true);
   }, []);
 
   const addXP = (amount: number) => {
@@ -130,10 +128,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       return newProgress;
     });
   };
-
-  if (!isLoaded) {
-    return <>{children}</>;
-  }
 
   return (
     <UserContext.Provider
