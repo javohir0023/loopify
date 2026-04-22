@@ -1,0 +1,173 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #0f0620;
+  --foreground: #fafafa;
+  --card: #1a1030;
+  --card-foreground: #fafafa;
+  --popover: #1a1030;
+  --popover-foreground: #fafafa;
+  --primary: #ec4899;
+  --primary-foreground: #000;
+  --secondary: #7c3aed;
+  --secondary-foreground: #fafafa;
+  --muted: #3f2556;
+  --muted-foreground: #a8a8a8;
+  --accent: #f472b6;
+  --accent-foreground: #000;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --border: #2d1e47;
+  --input: #1a1030;
+  --ring: #ec4899;
+  --chart-1: #ec4899;
+  --chart-2: #7c3aed;
+  --chart-3: #06b6d4;
+  --chart-4: #8b5cf6;
+  --chart-5: #f472b6;
+  --radius: 0.75rem;
+  --glow-pink: #ec4899;
+  --glow-purple: #7c3aed;
+  --glow-blue: #06b6d4;
+}
+
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback';
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-glow-pink: var(--glow-pink);
+  --color-glow-purple: var(--glow-purple);
+  --color-glow-blue: var(--glow-blue);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply bg-background;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Loopify-specific animations and effects */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(236, 72, 153, 0.8);
+  }
+}
+
+@keyframes floating-text {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(1.1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes level-up-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@layer utilities {
+  .glow-pink {
+    @apply text-primary;
+    text-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+  }
+  
+  .glow-button {
+    @apply border border-primary bg-gradient-to-r from-primary to-accent text-black font-semibold rounded-lg transition-all duration-300;
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+  }
+  
+  .glow-button:hover {
+    @apply scale-105;
+    box-shadow: 0 0 30px rgba(236, 72, 153, 0.6);
+  }
+
+  .glow-button:active {
+    @apply scale-95;
+  }
+
+  .card-glow {
+    @apply bg-card border border-border rounded-xl;
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.1);
+  }
+
+  .card-glow:hover {
+    @apply border-primary;
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+  }
+
+  .float-animation {
+    animation: floating-text 2s ease-out forwards;
+  }
+
+  .pulse-glow {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  .level-up {
+    animation: level-up-bounce 0.6s ease-in-out;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent;
+  }
+
+  .glass-effect {
+    @apply bg-card/40 backdrop-blur-md border border-primary/20;
+  }
+}

@@ -1,0 +1,246 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useOnboarding } from '@/lib/onboarding-context';
+import { GlowButton } from '@/components/loopify/GlowButton';
+import { GradientCard } from '@/components/loopify/GradientCard';
+
+type OnboardingStep = 'goal' | 'level' | 'time' | 'profile';
+
+const GOALS = [
+  { id: 'python', label: 'Python', icon: '🐍', description: 'Learn Python fundamentals' },
+  { id: 'web', label: 'Web Development', icon: '🌐', description: 'Master HTML, CSS & JavaScript' },
+  { id: 'ai', label: 'AI & ML', icon: '🤖', description: 'Explore AI and Machine Learning' },
+];
+
+const LEVELS = [
+  { id: 'beginner', label: 'Beginner', description: 'Just starting out' },
+  { id: 'intermediate', label: 'Intermediate', description: 'Some experience already' },
+];
+
+const TIMES = [
+  { id: 5, label: '5 minutes', description: 'Quick daily sessions' },
+  { id: 15, label: '15 minutes', description: 'Balanced learning' },
+  { id: 30, label: '30 minutes', description: 'Deep focus sessions' },
+];
+
+export default function OnboardingPage() {
+  const router = useRouter();
+  const { data, updateData } = useOnboarding();
+  const [step, setStep] = useState<OnboardingStep>('goal');
+  const [username, setUsername] = useState('');
+
+  const handleGoalSelect = (goalId: string) => {
+    updateData({ goal: goalId as 'python' | 'web' | 'ai' });
+    setStep('level');
+  };
+
+  const handleLevelSelect = (levelId: string) => {
+    updateData({ skillLevel: levelId as 'beginner' | 'intermediate' });
+    setStep('time');
+  };
+
+  const handleTimeSelect = (timeId: number) => {
+    updateData({ dailyTime: timeId as 5 | 15 | 30 });
+    setStep('profile');
+  };
+
+  const handleStartLearning = () => {
+    if (username.trim()) {
+      updateData({
+        username: username.trim(),
+        hasCompleted: true,
+      });
+      router.push('/');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold gradient-text mb-2">Loopify</h1>
+          <p className="text-muted-foreground">Learn coding with gamification and daily challenges</p>
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="flex gap-2 mb-8">
+          {['goal', 'level', 'time', 'profile'].map((s) => (
+            <div
+              key={s}
+              className={`h-1 flex-1 rounded-full transition-all ${
+                s === step ? 'bg-primary' : ['goal', 'level', 'time', 'profile'].indexOf(s) < ['goal', 'level', 'time', 'profile'].indexOf(step) ? 'bg-primary/50' : 'bg-border'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Step 1: Goal Selection */}
+        {step === 'goal' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">What do you want to learn?</h2>
+              <p className="text-muted-foreground">Choose your learning path</p>
+            </div>
+            <div className="grid gap-4">
+              {GOALS.map((goal) => (
+                <button
+                  key={goal.id}
+                  onClick={() => handleGoalSelect(goal.id)}
+                  className={`p-4 rounded-xl border-2 transition-all text-left ${
+                    data.goal === goal.id
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-3xl">{goal.icon}</span>
+                    <div>
+                      <h3 className="font-bold text-foreground">{goal.label}</h3>
+                      <p className="text-sm text-muted-foreground">{goal.description}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Skill Level */}
+        {step === 'level' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">What&apos;s your skill level?</h2>
+              <p className="text-muted-foreground">We&apos;ll tailor content to match your experience</p>
+            </div>
+            <div className="grid gap-4">
+              {LEVELS.map((level) => (
+                <button
+                  key={level.id}
+                  onClick={() => handleLevelSelect(level.id)}
+                  className={`p-4 rounded-xl border-2 transition-all text-left ${
+                    data.skillLevel === level.id
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <h3 className="font-bold text-foreground">{level.label}</h3>
+                  <p className="text-sm text-muted-foreground">{level.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Daily Time */}
+        {step === 'time' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">How much time daily?</h2>
+              <p className="text-muted-foreground">Choose your daily commitment</p>
+            </div>
+            <div className="grid gap-4">
+              {TIMES.map((time) => (
+                <button
+                  key={time.id}
+                  onClick={() => handleTimeSelect(time.id)}
+                  className={`p-4 rounded-xl border-2 transition-all text-left ${
+                    data.dailyTime === time.id
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <h3 className="font-bold text-foreground">{time.label}</h3>
+                  <p className="text-sm text-muted-foreground">{time.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Profile Setup */}
+        {step === 'profile' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Almost there!</h2>
+              <p className="text-muted-foreground">Let us know your name</p>
+            </div>
+            <GradientCard className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Your Name</label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your name"
+                    className="w-full bg-input border border-border rounded-lg px-4 py-2 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleStartLearning();
+                      }
+                    }}
+                  />
+                </div>
+                <div className="space-y-3 p-4 bg-card/50 rounded-lg border border-border">
+                  <div className="text-sm">
+                    <p className="font-semibold text-foreground mb-1">Your Learning Path:</p>
+                    <p className="text-muted-foreground">
+                      {GOALS.find((g) => g.id === data.goal)?.label} • {data.skillLevel?.charAt(0).toUpperCase() + data.skillLevel?.slice(1)} • {data.dailyTime} min/day
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </GradientCard>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="flex gap-3 mt-8">
+          {step !== 'goal' && (
+            <button
+              onClick={() => {
+                const steps: OnboardingStep[] = ['goal', 'level', 'time', 'profile'];
+                const currentIndex = steps.indexOf(step);
+                if (currentIndex > 0) {
+                  setStep(steps[currentIndex - 1]);
+                }
+              }}
+              className="px-6 py-2.5 rounded-lg border border-border text-foreground hover:border-primary transition-colors"
+            >
+              Back
+            </button>
+          )}
+          <div className="flex-1" />
+          {step !== 'profile' ? (
+            <GlowButton
+              onClick={() => {
+                const steps: OnboardingStep[] = ['goal', 'level', 'time', 'profile'];
+                const currentIndex = steps.indexOf(step);
+                if (currentIndex < steps.length - 1) {
+                  setStep(steps[currentIndex + 1]);
+                }
+              }}
+              disabled={
+                (step === 'goal' && !data.goal) ||
+                (step === 'level' && !data.skillLevel) ||
+                (step === 'time' && !data.dailyTime)
+              }
+            >
+              Next
+            </GlowButton>
+          ) : (
+            <GlowButton
+              onClick={handleStartLearning}
+              disabled={!username.trim()}
+            >
+              Start Learning
+            </GlowButton>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
