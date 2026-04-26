@@ -1,238 +1,225 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { QuizCard, QuizQuestion } from '@/components/loopify/QuizCard';
-import { QuizTimer } from '@/components/loopify/QuizTimer';
-import { QuizResults } from '@/components/loopify/QuizResults';
+import { useLanguage } from '@/lib/language-context';
+import { QUIZ_QUESTIONS, QUIZ_CATEGORIES, getQuizzesByCategory } from '@/lib/quiz-questions';
+import { GradientCard } from '@/components/loopify/GradientCard';
 import { GlowButton } from '@/components/loopify/GlowButton';
-import { ConfettiAnimation } from '@/components/loopify/ConfettiAnimation';
 
-type QuizState = 'intro' | 'question' | 'results';
+type QuizState = 'categories' | 'questions' | 'results';
 
-const QUIZ_QUESTIONS: QuizQuestion[] = [
-  {
-    id: '1',
-    question: 'What is the correct syntax for creating a list in Python?',
-    options: [
-      'my_list = {1, 2, 3}',
-      'my_list = [1, 2, 3]',
-      'my_list = (1, 2, 3)',
-      'my_list = 1, 2, 3 |',
-    ],
-    correctOptionIndex: 1,
-    explanation: 'In Python, lists are created using square brackets [].',
-  },
-  {
-    id: '2',
-    question: 'Which of the following is a mutable data type in Python?',
-    options: ['Tuple', 'String', 'List', 'Integer'],
-    correctOptionIndex: 2,
-    explanation: 'Lists are mutable, meaning you can modify their elements after creation.',
-  },
-  {
-    id: '3',
-    question: 'What does the `len()` function return?',
-    options: [
-      'The last element of a sequence',
-      'The length of a sequence',
-      'The first element of a sequence',
-      'The sum of all elements',
-    ],
-    correctOptionIndex: 1,
-    explanation: 'The len() function returns the number of items in a sequence.',
-  },
-  {
-    id: '4',
-    question: 'How do you add an element to a list?',
-    options: [
-      'list.add(item)',
-      'list.append(item)',
-      'list.insert(item)',
-      'list.push(item)',
-    ],
-    correctOptionIndex: 1,
-    explanation: 'The append() method adds an element to the end of a list.',
-  },
-  {
-    id: '5',
-    question: 'What is the output of `"hello".upper()`?',
-    options: ['"HELLO"', '"Hello"', 'Error', '"hello"'],
-    correctOptionIndex: 0,
-    explanation: 'The upper() method converts all characters in a string to uppercase.',
-  },
-];
-
-const TIMER_DURATION = 60; // seconds per question
-const XP_REWARD = 10;
+interface QuizSession {
+  categoryName: string;
+  questions: typeof QUIZ_QUESTIONS;
+  currentQuestionIndex: number;
+  score: number;
+  totalXP: number;
+  answers: Record<string, string>;
+}
 
 export default function QuizPage() {
-  const [state, setQuizState] = useState<QuizState>('intro');
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
-  const [answered, setAnswered] = useState(false);
-  const [score, setScore] = useState(0);
+  const { language } = useLanguage();
+  const [state, setState] = useState<QuizState>('categories');
+  const [session, setSession] = useState<QuizSession | null>(null);
 
-  const handleStartQuiz = () => {
-    setQuizState('question');
-    setCurrentQuestion(0);
-    setSelectedAnswers([]);
-    setScore(0);
-    setAnswered(false);
-  };
-
-  const handleSelectOption = (index: number) => {
-    setSelectedAnswers((prev) => {
-      const newAnswers = [...prev];
-      newAnswers[currentQuestion] = index;
-      return newAnswers;
+  const handleSelectCategory = (category: string) => {
+    const questions = getQuizzesByCategory(category);
+    setSession({
+      categoryName: category,
+      questions,
+      currentQuestionIndex: 0,
+      score: 0,
+      totalXP: 0,
+      answers: {},
     });
+    setState('questions');
   };
 
-  const handleAnswerQuestion = () => {
-    const question = QUIZ_QUESTIONS[currentQuestion];
-    if (selectedAnswers[currentQuestion] === question.correctOptionIndex) {
-      setScore((prev) => prev + 1);
+  const handleAnswerQuestion = (optionId: string, isCorrect: boolean) => {
+    if (!session) return;
+
+    const newSession = { ...session };
+    newSession.answers[session.questions[session.currentQuestionIndex].id] = optionId;
+
+    if (isCorrect) {
+      newSession.score += 1;
+      newSession.totalXP += session.questions[session.currentQuestionIndex].xpReward;
     }
-    setAnswered(true);
-  };
 
-  const handleNextQuestion = () => {
-    if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
-      setAnswered(false);
+    if (session.currentQuestionIndex < session.questions.length - 1) {
+      newSession.currentQuestionIndex += 1;
+      setSession(newSession);
     } else {
-      setQuizState('results');
+      setSession(newSession);
+      setState('results');
     }
   };
 
-  const handleTimeUp = () => {
-    if (!answered) {
-      handleAnswerQuestion();
-    } else {
-      handleNextQuestion();
-    }
+  const handleBackToCategories = () => {
+    setState('categories');
+    setSession(null);
   };
 
-  const handleRetryQuiz = () => {
-    handleStartQuiz();
-  };
-
-  const handleExitQuiz = () => {
-    setQuizState('intro');
-  };
-
-  const isPerfectScore = score === QUIZ_QUESTIONS.length;
-  const isGoodScore = score >= Math.ceil(QUIZ_QUESTIONS.length * 0.6);
-
-  return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Show confetti for good scores */}
-      {state === 'results' && isGoodScore && (
-        <ConfettiAnimation trigger={true} duration={3000} />
-      )}
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-border p-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold gradient-text">Python Fundamentals</h1>
+  // Categories View
+  if (state === 'categories') {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-border p-4">
+          <h1 className="text-2xl font-bold gradient-text">
+            {language === 'uz' ? 'Quizlar' : 'Quizzes'}
+          </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            {state === 'question'
-              ? `Question ${currentQuestion + 1} of ${QUIZ_QUESTIONS.length}`
-              : state === 'results'
-                ? 'Quiz Complete!'
-                : 'Ready to test your knowledge?'}
+            {language === 'uz' ? 'Bilimingizni sinab ko\'ring va XP oling' : 'Test your knowledge and earn XP'}
           </p>
         </div>
-        {state === 'question' && (
-          <QuizTimer
-            duration={TIMER_DURATION}
-            onTimeUp={handleTimeUp}
-            isActive={state === 'question' && !answered}
-          />
-        )}
-      </div>
 
-      {/* Main Content */}
-      <div className="p-4 space-y-6 max-w-2xl mx-auto">
-        {/* Intro State */}
-        {state === 'intro' && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 rounded-xl p-6">
-              <h2 className="text-2xl font-bold text-foreground mb-3">Python Fundamentals Quiz</h2>
-              <p className="text-muted-foreground mb-4">
-                Test your knowledge of Python basics with this interactive quiz. You'll have 60 seconds per question
-                to answer correctly.
+        <div className="p-4 max-w-2xl mx-auto space-y-4">
+          {QUIZ_CATEGORIES.map((category) => {
+            const quizzes = getQuizzesByCategory(category);
+            const totalXP = quizzes.reduce((sum, q) => sum + q.xpReward, 0);
+
+            return (
+              <GradientCard key={category} variant="purple" className="p-6">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">{category}</h2>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {quizzes.length} {language === 'uz' ? 'savol' : 'questions'} • +{totalXP} XP
+                      </p>
+                    </div>
+                  </div>
+                  <GlowButton
+                    onClick={() => handleSelectCategory(category)}
+                    className="w-full"
+                  >
+                    {language === 'uz' ? 'Quizni boshlash' : 'Start Quiz'}
+                  </GlowButton>
+                </div>
+              </GradientCard>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Quiz View
+  if (state === 'questions' && session) {
+    const currentQuestion = session.questions[session.currentQuestionIndex];
+    const correctOption = currentQuestion.options.find((opt) => opt.isCorrect);
+
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-border p-4">
+          <div className="max-w-2xl mx-auto">
+            <h1 className="text-2xl font-bold gradient-text">{session.categoryName}</h1>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-xs text-muted-foreground">
+                {language === 'uz' ? 'Savol' : 'Question'} {session.currentQuestionIndex + 1}/{session.questions.length}
               </p>
-              <div className="space-y-2 text-sm">
-                <p className="flex items-center gap-2">
-                  <span className="text-primary">✓</span>
-                  <span>5 questions to complete</span>
+              <div className="text-xs font-semibold text-primary">
+                {session.score}/{session.currentQuestionIndex}
+              </div>
+            </div>
+            <div className="w-full bg-border rounded-full h-2 mt-2">
+              <div
+                className="bg-primary h-2 rounded-full transition-all"
+                style={{
+                  width: `${((session.currentQuestionIndex + 1) / session.questions.length) * 100}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 max-w-2xl mx-auto space-y-6">
+          <GradientCard variant="pink" className="p-6">
+            <h2 className="text-lg font-bold text-foreground mb-6">
+              {language === 'uz' ? currentQuestion.questionUz : currentQuestion.question}
+            </h2>
+
+            <div className="space-y-3">
+              {currentQuestion.options.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleAnswerQuestion(option.id, option.isCorrect || false)}
+                  className="w-full p-4 text-left rounded-lg border-2 border-border hover:border-primary transition-colors bg-card hover:bg-card/80"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-primary opacity-0 group-hover:opacity-100" />
+                    </div>
+                    <span className="text-foreground">
+                      {language === 'uz' ? option.textUz : option.text}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 p-4 bg-card/50 rounded-lg border border-border">
+              <p className="text-xs text-muted-foreground">
+                <span className="font-semibold">💡 {language === 'uz' ? 'İzoh' : 'Tip'}:</span>{' '}
+                {language === 'uz' ? currentQuestion.explanationUz : currentQuestion.explanation}
+              </p>
+            </div>
+          </GradientCard>
+        </div>
+      </div>
+    );
+  }
+
+  // Results View
+  if (state === 'results' && session) {
+    const percentage = Math.round((session.score / session.questions.length) * 100);
+    const isPerfect = session.score === session.questions.length;
+
+    return (
+      <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center p-4">
+        <div className="max-w-sm w-full">
+          <GradientCard variant={isPerfect ? 'blue' : 'pink'} className="p-8 text-center">
+            <div className="text-6xl mb-4">{isPerfect ? '🎉' : '🌟'}</div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              {language === 'uz' ? 'Tabriklaydi!' : 'Excellent!'}
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              {language === 'uz' ? `${session.categoryName} quizini yakunladingiz` : `You completed ${session.categoryName}`}
+            </p>
+
+            <div className="space-y-4 mb-8">
+              <div className="bg-card/50 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">
+                  {language === 'uz' ? "To'g'ri Javoblar" : 'Correct Answers'}
                 </p>
-                <p className="flex items-center gap-2">
-                  <span className="text-primary">✓</span>
-                  <span>Earn +{XP_REWARD * QUIZ_QUESTIONS.length} XP on completion</span>
+                <p className="text-3xl font-bold text-primary">
+                  {session.score}/{session.questions.length}
                 </p>
-                <p className="flex items-center gap-2">
-                  <span className="text-primary">✓</span>
-                  <span>60 seconds per question</span>
+              </div>
+
+              <div className="bg-card/50 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">
+                  {language === 'uz' ? 'Foiz' : 'Percentage'}
                 </p>
+                <p className="text-3xl font-bold text-primary">{percentage}%</p>
+              </div>
+
+              <div className="bg-card/50 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">
+                  {language === 'uz' ? 'Olingan XP' : 'Earned XP'}
+                </p>
+                <p className="text-3xl font-bold text-primary">+{session.totalXP}</p>
               </div>
             </div>
 
-            <GlowButton onClick={handleStartQuiz} className="w-full" size="lg">
-              Start Quiz
+            <GlowButton onClick={handleBackToCategories} className="w-full">
+              {language === 'uz' ? 'Quizlarga qaytish' : 'Back to Quizzes'}
             </GlowButton>
-
-            <Link href="/gamification">
-              <GlowButton variant="outline" className="w-full">
-                Back to Challenges
-              </GlowButton>
-            </Link>
-          </div>
-        )}
-
-        {/* Question State */}
-        {state === 'question' && (
-          <div className="space-y-6">
-            <QuizCard
-              question={QUIZ_QUESTIONS[currentQuestion]}
-              currentQuestion={currentQuestion + 1}
-              totalQuestions={QUIZ_QUESTIONS.length}
-              selectedOption={selectedAnswers[currentQuestion]}
-              onSelectOption={handleSelectOption}
-              isAnswered={answered}
-            />
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              {!answered ? (
-                <GlowButton
-                  onClick={handleAnswerQuestion}
-                  disabled={selectedAnswers[currentQuestion] === undefined}
-                  className="flex-1"
-                >
-                  Submit Answer
-                </GlowButton>
-              ) : (
-                <GlowButton onClick={handleNextQuestion} className="flex-1">
-                  {currentQuestion === QUIZ_QUESTIONS.length - 1 ? 'Finish Quiz' : 'Next Question'}
-                </GlowButton>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Results State */}
-        {state === 'results' && (
-          <QuizResults
-            score={score}
-            totalQuestions={QUIZ_QUESTIONS.length}
-            xpEarned={score * XP_REWARD}
-            onRetry={handleRetryQuiz}
-            onExit={handleExitQuiz}
-          />
-        )}
+          </GradientCard>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }

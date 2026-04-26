@@ -4,21 +4,24 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '@/lib/onboarding-context';
 import { useUser } from '@/lib/user-context';
+import { useLanguage } from '@/lib/language-context';
 import { GradientCard } from '@/components/loopify/GradientCard';
 import { GlowButton } from '@/components/loopify/GlowButton';
 import { StatCard } from '@/components/loopify/StatCard';
+import { LanguageSwitcher } from '@/components/loopify/LanguageSwitcher';
 
 const ACHIEVEMENTS = [
-  { id: 1, name: 'First Steps', icon: '🚀', description: 'Complete your first lesson' },
-  { id: 2, name: 'Quiz Master', icon: '📝', description: 'Score 100% on 5 quizzes' },
-  { id: 3, name: 'Week Warrior', icon: '🔥', description: 'Maintain a 7-day streak' },
-  { id: 4, name: 'Project Builder', icon: '🛠️', description: 'Complete 3 projects' },
+  { id: 1, name: 'Birinchi qadam', icon: '🚀', description: 'Birinchi darsni yakunlang' },
+  { id: 2, name: 'Quiz Ustasi', icon: '📝', description: '5 ta quizda 100% oling' },
+  { id: 3, name: 'Hafta jangari', icon: '🔥', description: '7 kunlik ketma-ketlikni saqlang' },
+  { id: 4, name: 'Loyiha quruvchi', icon: '🛠️', description: '3 ta loyihani yakunlang' },
 ];
 
 export default function ProfilePage() {
   const router = useRouter();
   const { data } = useOnboarding();
   const { progress } = useUser();
+  const { t } = useLanguage();
 
   const handleLogout = () => {
     localStorage.clear();
@@ -29,8 +32,8 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-border p-4">
-        <h1 className="text-2xl font-bold gradient-text">Profile</h1>
-        <p className="text-xs text-muted-foreground mt-1">Your learning stats</p>
+        <h1 className="text-2xl font-bold gradient-text">{t.nav.profile}</h1>
+        <p className="text-xs text-muted-foreground mt-1">Sizning o\'quv statistikangiz</p>
       </div>
 
       {/* Main Content */}
@@ -57,36 +60,36 @@ export default function ProfilePage() {
         <div className="grid grid-cols-2 gap-4">
           <StatCard
             icon="📊"
-            label="Total XP"
+            label="Jami XP"
             value={progress.totalXP.toLocaleString()}
-            secondaryValue={`Level ${progress.level}`}
+            secondaryValue={`${t.common.level} ${progress.level}`}
             variant="pink"
           />
           <StatCard
             icon="🔥"
-            label="Streak"
+            label={t.common.streak}
             value={progress.streak}
-            secondaryValue="days"
+            secondaryValue="kun"
             variant="blue"
           />
           <StatCard
             icon="🏆"
-            label="Badges"
+            label="Medallar"
             value={progress.badges.length}
-            secondaryValue="earned"
+            secondaryValue="olingan"
             variant="purple"
           />
           <StatCard
             icon="📚"
-            label="Quizzes"
+            label="Quizlar"
             value={progress.totalQuizzesTaken}
-            secondaryValue="completed"
+            secondaryValue="yakunlangan"
           />
         </div>
 
         {/* Achievements */}
         <div>
-          <h3 className="font-bold text-foreground mb-3">Achievements</h3>
+          <h3 className="font-bold text-foreground mb-3">{t.gamification.achievements}</h3>
           <div className="grid grid-cols-2 gap-3">
             {ACHIEVEMENTS.map((achievement) => (
               <GradientCard key={achievement.id} className="p-4 text-center">
@@ -102,28 +105,34 @@ export default function ProfilePage() {
         <GradientCard variant="blue" className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-foreground">Premium Status</h3>
+              <h3 className="font-bold text-foreground">Premium holati</h3>
               <p className="text-sm text-muted-foreground">
-                {progress.isPremium ? 'Pro Tier Active' : 'Currently Free Plan'}
+                {progress.isPremium ? 'Pro Plan faol' : 'Hozirda Bepul rejani ishlatmoqda'}
               </p>
             </div>
             {!progress.isPremium && (
               <Link href="/premium">
                 <GlowButton size="sm" variant="secondary">
-                  Upgrade
+                  Yangilash
                 </GlowButton>
               </Link>
             )}
           </div>
         </GradientCard>
 
+        {/* Language Settings */}
+        <GradientCard className="p-4">
+          <h3 className="font-bold text-foreground mb-4">Til</h3>
+          <LanguageSwitcher />
+        </GradientCard>
+
         {/* Settings */}
         <div className="space-y-2">
-          <h3 className="font-bold text-foreground mb-3">Settings</h3>
+          <h3 className="font-bold text-foreground mb-3">Sozlamalar</h3>
           <GradientCard className="p-4">
             <button className="w-full text-left hover:text-primary transition-colors">
-              <p className="font-medium text-foreground">Edit Profile</p>
-              <p className="text-xs text-muted-foreground mt-1">Change your name and preferences</p>
+              <p className="font-medium text-foreground">Profilni tahrirlash</p>
+              <p className="text-xs text-muted-foreground mt-1">Nomingiz va boshqa parametrlarni o\'zgartiring</p>
             </button>
           </GradientCard>
           <GradientCard className="p-4">

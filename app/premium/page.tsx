@@ -1,32 +1,54 @@
 'use client';
 
 import Link from 'next/link';
+import { useLanguage } from '@/lib/language-context';
 import { GradientCard } from '@/components/loopify/GradientCard';
 import { GlowButton } from '@/components/loopify/GlowButton';
 
 const TIERS = [
   {
     id: 'free',
-    name: 'Free',
+    name: 'Bepul',
+    nameEn: 'Free',
     price: '$0',
-    description: 'Perfect for getting started',
+    description: 'Boshlash uchun ideal',
+    descriptionEn: 'Perfect for getting started',
     features: [
+      'Asosiy o\'quv materiallari',
+      'Kunga 3 quiz',
+      'Cheklangan AI chatbot (kunga 5 xabar)',
+      'Jamoaviy kirish',
+      'Reklama bilan',
+    ],
+    featuresEn: [
       'Basic learning content',
       '3 quizzes per day',
       'Limited AI chatbot (5 msg/day)',
       'Community access',
       'Ad-supported',
     ],
-    cta: 'Current Plan',
+    cta: 'Hozirgi rejani',
+    ctaEn: 'Current Plan',
     disabled: true,
   },
   {
     id: 'pro',
     name: 'Pro',
+    nameEn: 'Pro',
     price: '$9.99',
-    period: '/month',
-    description: 'For serious learners',
+    period: '/oy',
+    periodEn: '/month',
+    description: 'Jiddiy o\'quvchilar uchun',
+    descriptionEn: 'For serious learners',
     features: [
+      'Barcha Bepul xususiyatlar',
+      'Cheksiz quizlar',
+      'Barcha mini loyihalar',
+      'Cheksiz AI chatbot',
+      'Reklamasiz tajriba',
+      'Oflayn kontent',
+    ],
+    featuresEn: [
       'All Free features',
       'Unlimited quizzes',
       'All mini projects',
@@ -34,16 +56,28 @@ const TIERS = [
       'Ad-free experience',
       'Offline content',
     ],
-    cta: 'Upgrade to Pro',
+    cta: 'Pro\'ga yangilash',
+    ctaEn: 'Upgrade to Pro',
     disabled: false,
   },
   {
     id: 'pro-plus',
     name: 'Pro+',
+    nameEn: 'Pro+',
     price: '$19.99',
-    period: '/month',
-    description: 'Ultimate learning experience',
+    period: '/oy',
+    periodEn: '/month',
+    description: 'Eng yaxshi o\'quv tajribasi',
+    descriptionEn: 'Ultimate learning experience',
     features: [
+      'Barcha Pro xususiyatlar',
+      '1-on-1 mentorligi',
+      'Murakkab loyihalar',
+      'Kod ko\'rib chiqish xizmati',
+      'Prioritet yordami',
+      'Tugatish sertifikati',
+    ],
+    featuresEn: [
       'All Pro features',
       '1-on-1 mentorship',
       'Advanced projects',
@@ -51,24 +85,27 @@ const TIERS = [
       'Priority support',
       'Certificate of completion',
     ],
-    cta: 'Upgrade to Pro+',
+    cta: 'Pro+\'ga yangilash',
+    ctaEn: 'Upgrade to Pro+',
     disabled: false,
-    badge: 'Most Popular',
+    badge: 'Eng mashhur',
+    badgeEn: 'Most Popular',
   },
 ];
 
 export default function PremiumPage() {
+  const { language } = useLanguage();
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-border p-4">
-        <Link href="/">
-          <button className="text-muted-foreground hover:text-foreground transition-colors mb-2">
-            ← Back
-          </button>
-        </Link>
-        <h1 className="text-2xl font-bold gradient-text">Premium Plans</h1>
-        <p className="text-xs text-muted-foreground mt-1">Unlock your full potential</p>
+        <h1 className="text-2xl font-bold gradient-text">
+          {language === 'uz' ? 'Premium Rejalari' : 'Premium Plans'}
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1">
+          {language === 'uz' ? 'Cheksiz o\'quvni qulfdan chiqaring' : 'Unlock unlimited learning'}
+        </p>
       </div>
 
       {/* Main Content */}
@@ -84,70 +121,73 @@ export default function PremiumPage() {
         {/* Pricing Cards */}
         <div className="space-y-4">
           {TIERS.map((tier) => (
-            <div key={tier.id} className="relative">
+            <GradientCard key={tier.id} variant={tier.id === 'pro-plus' ? 'purple' : 'pink'} className="p-6 relative">
               {tier.badge && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-primary text-black text-xs font-bold px-3 py-1 rounded-full">
-                    {tier.badge}
-                  </span>
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-black px-3 py-1 rounded-full text-xs font-bold">
+                  {language === 'uz' ? tier.badge : tier.badgeEn}
                 </div>
               )}
-              <GradientCard
-                className={`p-6 ${tier.id === 'pro-plus' ? 'border-primary' : ''}`}
-              >
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-foreground">{tier.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{tier.description}</p>
-                  </div>
-
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-primary">{tier.price}</span>
-                    {tier.period && <span className="text-muted-foreground text-sm">{tier.period}</span>}
-                  </div>
-
-                  <div className="space-y-2 border-t border-border pt-4">
-                    {tier.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-sm">
-                        <span className="text-primary mt-0.5">✓</span>
-                        <span className="text-foreground">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <GlowButton
-                    className="w-full"
-                    disabled={tier.disabled}
-                    variant={tier.id === 'pro-plus' ? 'primary' : 'secondary'}
-                  >
-                    {tier.cta}
-                  </GlowButton>
-                </div>
-              </GradientCard>
-            </div>
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                {language === 'uz' ? tier.name : tier.nameEn}
+              </h2>
+              <p className="text-muted-foreground text-sm mb-4">
+                {language === 'uz' ? tier.description : tier.descriptionEn}
+              </p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-primary">{tier.price}</span>
+                <span className="text-muted-foreground text-sm">
+                  {language === 'uz' ? tier.period : tier.periodEn}
+                </span>
+              </div>
+              <ul className="space-y-3 mb-6">
+                {(language === 'uz' ? tier.features : tier.featuresEn).map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
+                    <span className="text-primary mt-1">✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <GlowButton disabled={tier.disabled} className="w-full">
+                {language === 'uz' ? tier.cta : tier.ctaEn}
+              </GlowButton>
+            </GradientCard>
           ))}
         </div>
 
         {/* FAQ Section */}
         <GradientCard variant="blue" className="p-6">
-          <h3 className="font-bold text-foreground mb-4">Frequently Asked Questions</h3>
+          <h3 className="font-bold text-foreground mb-4">
+            {language === 'uz' ? 'Tez-tez so\'raladigan savollar' : 'Frequently Asked Questions'}
+          </h3>
           <div className="space-y-4 text-sm">
             <div>
-              <p className="font-semibold text-foreground">Can I change my plan later?</p>
+              <p className="font-semibold text-foreground">
+                {language === 'uz' ? 'Keyinchalik rejani o\'zgartirishim mumkinmi?' : 'Can I change my plan later?'}
+              </p>
               <p className="text-muted-foreground mt-1">
-                Yes, you can upgrade or downgrade anytime. Changes take effect at your next billing cycle.
+                {language === 'uz'
+                  ? 'Ha, siz istalgan vaqtda yangilashingiz yoki pasaytirishingiz mumkin. O\'zgarishlar keyingi to\'liq siklida amalga oshadi.'
+                  : 'Yes, you can upgrade or downgrade anytime. Changes take effect at your next billing cycle.'}
               </p>
             </div>
             <div>
-              <p className="font-semibold text-foreground">Do you offer a free trial?</p>
+              <p className="font-semibold text-foreground">
+                {language === 'uz' ? 'Bepul sinov vaqtini taqdim etasizmi?' : 'Do you offer a free trial?'}
+              </p>
               <p className="text-muted-foreground mt-1">
-                We offer a 7-day free trial for Pro and Pro+ plans. No credit card required!
+                {language === 'uz'
+                  ? 'Biz Pro va Pro+ rejalari uchun 7 kunlik bepul sinov taqdim etamiz. Kredit kartasi kerak emas!'
+                  : 'We offer a 7-day free trial for Pro and Pro+ plans. No credit card required!'}
               </p>
             </div>
             <div>
-              <p className="font-semibold text-foreground">What payment methods do you accept?</p>
+              <p className="font-semibold text-foreground">
+                {language === 'uz' ? 'Qanday to\'lov usullarini qabul qilasiz?' : 'What payment methods do you accept?'}
+              </p>
               <p className="text-muted-foreground mt-1">
-                We accept all major credit cards, Apple Pay, Google Pay, and PayPal.
+                {language === 'uz'
+                  ? 'Biz barcha asosiy kredit kartalarini, Apple Pay, Google Pay va PayPalni qabul qilamiz.'
+                  : 'We accept all major credit cards, Apple Pay, Google Pay, and PayPal.'}
               </p>
             </div>
           </div>
@@ -155,8 +195,8 @@ export default function PremiumPage() {
 
         {/* Back Button */}
         <Link href="/">
-          <GlowButton className="w-full" variant="outline">
-            Back to Home
+          <GlowButton className="w-full">
+            {language === 'uz' ? 'Bosh sahifaga qaytish' : 'Back to Home'}
           </GlowButton>
         </Link>
       </div>

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '@/lib/onboarding-context';
 import { useUser } from '@/lib/user-context';
+import { useLanguage } from '@/lib/language-context';
 import { getCurrentLevelXP, getXPForNextLevel } from '@/lib/xp-system';
 import { GlowButton } from '@/components/loopify/GlowButton';
 import { GradientCard } from '@/components/loopify/GradientCard';
@@ -15,6 +16,7 @@ export default function HomePage() {
   const router = useRouter();
   const { data } = useOnboarding();
   const { progress } = useUser();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!data.hasCompleted) {
@@ -36,7 +38,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold gradient-text">Loopify</h1>
-            <p className="text-xs text-muted-foreground">Welcome back, {data.username}!</p>
+            <p className="text-xs text-muted-foreground">{t.home.welcome} {data.username}!</p>
           </div>
           <button className="w-10 h-10 rounded-full bg-card border border-border hover:border-primary transition-colors flex items-center justify-center text-lg">
             {data.username?.charAt(0).toUpperCase()}
@@ -50,9 +52,9 @@ export default function HomePage() {
         <GradientCard variant="purple" className="p-6">
           <div className="space-y-4">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-primary">Level {progress.level}</span>
+              <span className="text-4xl font-bold text-primary">{t.common.level} {progress.level}</span>
               <span className="text-sm text-muted-foreground">
-                {progress.totalXP.toLocaleString()} total XP
+                {progress.totalXP.toLocaleString()} {t.common.xp}
               </span>
             </div>
             <LevelProgressBar
@@ -61,7 +63,7 @@ export default function HomePage() {
               level={progress.level}
             />
             <div className="pt-2 text-sm text-muted-foreground">
-              {xpForNextLevel - currentXPForLevel} XP to next level
+              {xpForNextLevel - currentXPForLevel} {t.common.xp} {t.home.xpToNextLevel}
             </div>
           </div>
         </GradientCard>
@@ -77,13 +79,13 @@ export default function HomePage() {
         <div className="grid grid-cols-2 gap-4">
           <StatCard
             icon="🎯"
-            label="Quizzes Done"
+            label={t.learning.quiz}
             value={progress.totalQuizzesTaken}
             variant="pink"
           />
           <StatCard
             icon="🏆"
-            label="Badges"
+            label={t.gamification.achievements}
             value={progress.badges.length}
             variant="blue"
           />
@@ -94,31 +96,31 @@ export default function HomePage() {
           <GradientCard className="p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="font-bold text-foreground mb-1">Daily Challenge</h3>
-                <p className="text-sm text-muted-foreground">Complete today&apos;s quiz for +20 XP</p>
+                <h3 className="font-bold text-foreground mb-1">{t.gamification.dailyChallenge}</h3>
+                <p className="text-sm text-muted-foreground">{t.gamification.challenge}ni yakunlang +20 {t.common.xp} uchun</p>
               </div>
-              <GlowButton size="sm">Start</GlowButton>
+              <GlowButton size="sm">{t.common.start}</GlowButton>
             </div>
           </GradientCard>
 
           <GradientCard className="p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="font-bold text-foreground mb-1">Continue Learning</h3>
-                <p className="text-sm text-muted-foreground">Python basics - Lesson 3</p>
+                <h3 className="font-bold text-foreground mb-1">{t.nav.learning}ni davom ettiring</h3>
+                <p className="text-sm text-muted-foreground">Python asoslari - Dars 3</p>
               </div>
-              <GlowButton size="sm">Resume</GlowButton>
+              <GlowButton size="sm">{t.common.next}</GlowButton>
             </div>
           </GradientCard>
 
           <GradientCard className="p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="font-bold text-foreground mb-1">New Project</h3>
-                <p className="text-sm text-muted-foreground">Build a calculator app (Beginner)</p>
+                <h3 className="font-bold text-foreground mb-1">Yangi loyiha</h3>
+                <p className="text-sm text-muted-foreground">Kalkulyator ilovasi yarating ({t.gamification.beginner})</p>
               </div>
               <GlowButton size="sm" variant="secondary">
-                Start
+                {t.common.start}
               </GlowButton>
             </div>
           </GradientCard>
@@ -126,20 +128,20 @@ export default function HomePage() {
 
         {/* Features Preview */}
         <GradientCard variant="blue" className="p-6">
-          <h3 className="font-bold text-foreground mb-4">What&apos;s New</h3>
+          <h3 className="font-bold text-foreground mb-4">Yangiliklari</h3>
           <div className="space-y-3 text-sm">
             <div className="flex gap-2">
               <span className="text-primary">✨</span>
               <div>
-                <p className="font-semibold text-foreground">New AI Chatbot</p>
-                <p className="text-muted-foreground text-xs">Get instant help with coding questions</p>
+                <p className="font-semibold text-foreground">Yangi AI Yordamchi</p>
+                <p className="text-muted-foreground text-xs">Dasturlash savollari uchun tezkor yordam oling</p>
               </div>
             </div>
             <div className="flex gap-2">
               <span className="text-primary">🎁</span>
               <div>
-                <p className="font-semibold text-foreground">Premium Available</p>
-                <p className="text-muted-foreground text-xs">Unlock advanced courses and projects</p>
+                <p className="font-semibold text-foreground">Premium mavjud</p>
+                <p className="text-muted-foreground text-xs">Murakkab kurslar va loyihalarni qulfdan chiqaring</p>
               </div>
             </div>
           </div>

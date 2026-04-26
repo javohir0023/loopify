@@ -3,33 +3,35 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '@/lib/onboarding-context';
+import { useLanguage } from '@/lib/language-context';
 import { GlowButton } from '@/components/loopify/GlowButton';
 import { GradientCard } from '@/components/loopify/GradientCard';
 
 type OnboardingStep = 'goal' | 'level' | 'time' | 'profile';
 
-const GOALS = [
-  { id: 'python', label: 'Python', icon: '🐍', description: 'Learn Python fundamentals' },
-  { id: 'web', label: 'Web Development', icon: '🌐', description: 'Master HTML, CSS & JavaScript' },
-  { id: 'ai', label: 'AI & ML', icon: '🤖', description: 'Explore AI and Machine Learning' },
-];
-
-const LEVELS = [
-  { id: 'beginner', label: 'Beginner', description: 'Just starting out' },
-  { id: 'intermediate', label: 'Intermediate', description: 'Some experience already' },
-];
-
-const TIMES = [
-  { id: 5, label: '5 minutes', description: 'Quick daily sessions' },
-  { id: 15, label: '15 minutes', description: 'Balanced learning' },
-  { id: 30, label: '30 minutes', description: 'Deep focus sessions' },
-];
-
 export default function OnboardingPage() {
   const router = useRouter();
   const { data, updateData } = useOnboarding();
+  const { t } = useLanguage();
   const [step, setStep] = useState<OnboardingStep>('goal');
   const [username, setUsername] = useState('');
+
+  const GOALS = [
+    { id: 'python', label: 'Python', icon: '🐍', description: 'Python asoslarini o\'rganing' },
+    { id: 'web', label: 'Web Dasturlash', icon: '🌐', description: 'HTML, CSS va JavaScriptni o\'zlashtiring' },
+    { id: 'ai', label: 'Sun\'iy intellekt', icon: '🤖', description: 'Sun\'iy intellekt va mashina o\'qitishini o\'rganing' },
+  ];
+
+  const LEVELS = [
+    { id: 'beginner', label: t.onboarding.levels.beginner, description: 'Yangi boshlovchi' },
+    { id: 'intermediate', label: t.onboarding.levels.intermediate, description: 'Birozam tajribam bor' },
+  ];
+
+  const TIMES = [
+    { id: 5, label: t.onboarding.times.five, description: 'Tez kunlik sessiyalari' },
+    { id: 15, label: t.onboarding.times.fifteen, description: 'Muvozanatlashtirilgan o\'quv' },
+    { id: 30, label: t.onboarding.times.thirty, description: 'Chuqur diqqat bilan o\'quv' },
+  ];
 
   const handleGoalSelect = (goalId: string) => {
     updateData({ goal: goalId as 'python' | 'web' | 'ai' });
@@ -62,7 +64,7 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold gradient-text mb-2">Loopify</h1>
-          <p className="text-muted-foreground">Learn coding with gamification and daily challenges</p>
+          <p className="text-muted-foreground">Gamifikatsiya va kundalik tanlovlar bilan dasturlashni o'rganing</p>
         </div>
 
         {/* Progress Indicator */}
@@ -81,8 +83,8 @@ export default function OnboardingPage() {
         {step === 'goal' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">What do you want to learn?</h2>
-              <p className="text-muted-foreground">Choose your learning path</p>
+              <h2 className="text-2xl font-bold mb-2">Nima o'rganmoqchi bo'lasiz?</h2>
+              <p className="text-muted-foreground">O'quv yo'lingizni tanlang</p>
             </div>
             <div className="grid gap-4">
               {GOALS.map((goal) => (
@@ -112,8 +114,8 @@ export default function OnboardingPage() {
         {step === 'level' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">What&apos;s your skill level?</h2>
-              <p className="text-muted-foreground">We&apos;ll tailor content to match your experience</p>
+              <h2 className="text-2xl font-bold mb-2">Sizning ko'nikma darajangiz nima?</h2>
+              <p className="text-muted-foreground">Biz kontentni sizning tajribangizga muvofiq tanlayb beramiz</p>
             </div>
             <div className="grid gap-4">
               {LEVELS.map((level) => (
@@ -138,8 +140,8 @@ export default function OnboardingPage() {
         {step === 'time' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">How much time daily?</h2>
-              <p className="text-muted-foreground">Choose your daily commitment</p>
+              <h2 className="text-2xl font-bold mb-2">Kuniga qancha vaqt yo'llab berish mumkin?</h2>
+              <p className="text-muted-foreground">Kuniga o'quv vaqtini tanlang</p>
             </div>
             <div className="grid gap-4">
               {TIMES.map((time) => (
@@ -164,18 +166,18 @@ export default function OnboardingPage() {
         {step === 'profile' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Almost there!</h2>
-              <p className="text-muted-foreground">Let us know your name</p>
+              <h2 className="text-2xl font-bold mb-2">Deyarli tayyor!</h2>
+              <p className="text-muted-foreground">Ismingizni bizga bildiring</p>
             </div>
             <GradientCard className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Your Name</label>
+                  <label className="block text-sm font-medium mb-2">Sizning ismingiz</label>
                   <input
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter your name"
+                    placeholder="Ismingizni kiriting"
                     className="w-full bg-input border border-border rounded-lg px-4 py-2 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
@@ -186,9 +188,9 @@ export default function OnboardingPage() {
                 </div>
                 <div className="space-y-3 p-4 bg-card/50 rounded-lg border border-border">
                   <div className="text-sm">
-                    <p className="font-semibold text-foreground mb-1">Your Learning Path:</p>
+                    <p className="font-semibold text-foreground mb-1">Sizning o'quv yo'lingiz:</p>
                     <p className="text-muted-foreground">
-                      {GOALS.find((g) => g.id === data.goal)?.label} • {data.skillLevel?.charAt(0).toUpperCase() + data.skillLevel?.slice(1)} • {data.dailyTime} min/day
+                      {GOALS.find((g) => g.id === data.goal)?.label} • {data.skillLevel?.charAt(0).toUpperCase() + data.skillLevel?.slice(1)} • {data.dailyTime} daqiqa/kun
                     </p>
                   </div>
                 </div>
@@ -210,7 +212,7 @@ export default function OnboardingPage() {
               }}
               className="px-6 py-2.5 rounded-lg border border-border text-foreground hover:border-primary transition-colors"
             >
-              Back
+              Orqaga
             </button>
           )}
           <div className="flex-1" />
@@ -229,14 +231,14 @@ export default function OnboardingPage() {
                 (step === 'time' && !data.dailyTime)
               }
             >
-              Next
+              Keyingi
             </GlowButton>
           ) : (
             <GlowButton
               onClick={handleStartLearning}
               disabled={!username.trim()}
             >
-              Start Learning
+              O'quvni boshlash
             </GlowButton>
           )}
         </div>

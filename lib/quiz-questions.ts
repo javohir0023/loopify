@@ -1,0 +1,499 @@
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  questionUz: string;
+  options: Array<{ id: string; text: string; textUz: string; isCorrect?: boolean }>;
+  explanation: string;
+  explanationUz: string;
+  xpReward: number;
+  category: string;
+}
+
+export const QUIZ_QUESTIONS: QuizQuestion[] = [
+  // Python Asoslari - 10 savol
+  {
+    id: 'py-q1',
+    question: "What is the correct syntax to create a variable in Python?",
+    questionUz: "Python'da o'zgaruvchi qanday yaratiladi?",
+    options: [
+      { id: 'a', text: 'int x = 5', textUz: 'int x = 5' },
+      { id: 'b', text: 'x = 5', textUz: 'x = 5', isCorrect: true },
+      { id: 'c', text: 'let x = 5', textUz: 'let x = 5' },
+      { id: 'd', text: 'var x = 5', textUz: 'var x = 5' },
+    ],
+    explanation: 'In Python, variables are created simply by assigning a value with =',
+    explanationUz: "Python-da o'zgaruvchilar = operator bilan qiymat tayinlash orqali yaratiladi",
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+  {
+    id: 'py-q2',
+    question: "How do you print in Python?",
+    questionUz: "Python-da qaysi biri to'g'ri print?",
+    options: [
+      { id: 'a', text: 'echo("Hello")', textUz: 'echo("Hello")' },
+      { id: 'b', text: 'print("Hello")', textUz: 'print("Hello")', isCorrect: true },
+      { id: 'c', text: 'console.log("Hello")', textUz: 'console.log("Hello")' },
+      { id: 'd', text: 'printf("Hello")', textUz: 'printf("Hello")' },
+    ],
+    explanation: 'Python uses the print() function for output',
+    explanationUz: 'Python print() funksiyasini chiqarish uchun ishlantadi',
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+  {
+    id: 'py-q3',
+    question: "How is a list created in Python?",
+    questionUz: "Python-da list qanday yoziladi?",
+    options: [
+      { id: 'a', text: '{1,2,3}', textUz: '{1,2,3}' },
+      { id: 'b', text: '(1,2,3)', textUz: '(1,2,3)' },
+      { id: 'c', text: '[1,2,3]', textUz: '[1,2,3]', isCorrect: true },
+      { id: 'd', text: '<1,2,3>', textUz: '<1,2,3>' },
+    ],
+    explanation: 'Lists in Python are created using square brackets []',
+    explanationUz: "Python-da listlar kvadrat qavslar [] bilan yaratiladi",
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+  {
+    id: 'py-q4',
+    question: 'What does len([1,2,3]) return?',
+    questionUz: 'len([1,2,3]) natijasi?',
+    options: [
+      { id: 'a', text: '2', textUz: '2' },
+      { id: 'b', text: '3', textUz: '3', isCorrect: true },
+      { id: 'c', text: '4', textUz: '4' },
+      { id: 'd', text: '1', textUz: '1' },
+    ],
+    explanation: 'len() returns the number of elements in a list',
+    explanationUz: 'len() funksiyasi listdagi elementlar sonini qaytaradi',
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+  {
+    id: 'py-q5',
+    question: 'Which is a string?',
+    questionUz: 'Qaysi biri string?',
+    options: [
+      { id: 'a', text: '123', textUz: '123' },
+      { id: 'b', text: 'True', textUz: 'True' },
+      { id: 'c', text: '"Hello"', textUz: '"Hello"', isCorrect: true },
+      { id: 'd', text: 'None', textUz: 'None' },
+    ],
+    explanation: 'Strings are text enclosed in quotes (single or double)',
+    explanationUz: "String'lar tirnoqlar ichiga olgan matnlardir",
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+  {
+    id: 'py-q6',
+    question: 'How do you write comments in Python?',
+    questionUz: 'Python-da comment qanday yoziladi?',
+    options: [
+      { id: 'a', text: '//', textUz: '//' },
+      { id: 'b', text: '<!--', textUz: '<!--' },
+      { id: 'c', text: '#', textUz: '#', isCorrect: true },
+      { id: 'd', text: '**', textUz: '**' },
+    ],
+    explanation: 'Comments in Python start with # symbol',
+    explanationUz: 'Python-da izohlar # belgisidan boshlanadi',
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+  {
+    id: 'py-q7',
+    question: 'What does type(5) return?',
+    questionUz: 'type(5) nima qaytaradi?',
+    options: [
+      { id: 'a', text: 'string', textUz: 'string' },
+      { id: 'b', text: 'int', textUz: 'int', isCorrect: true },
+      { id: 'c', text: 'float', textUz: 'float' },
+      { id: 'd', text: 'bool', textUz: 'bool' },
+    ],
+    explanation: 'type() function returns the data type. 5 is an integer',
+    explanationUz: "type() funksiyasi ma'lumot turini qaytaradi. 5 - butun son",
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+  {
+    id: 'py-q8',
+    question: 'Which operator is multiplication?',
+    questionUz: "Qaysi operator ko'paytirish?",
+    options: [
+      { id: 'a', text: '+', textUz: '+' },
+      { id: 'b', text: '*', textUz: '*', isCorrect: true },
+      { id: 'c', text: '/', textUz: '/' },
+      { id: 'd', text: '%', textUz: '%' },
+    ],
+    explanation: 'The * operator is used for multiplication',
+    explanationUz: "* operatori ko'paytirish uchun ishlatiladi",
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+  {
+    id: 'py-q9',
+    question: 'What is 5 == "5"?',
+    questionUz: '5 == "5" natijasi?',
+    options: [
+      { id: 'a', text: 'True', textUz: 'True' },
+      { id: 'b', text: 'False', textUz: 'False', isCorrect: true },
+      { id: 'c', text: 'Error', textUz: 'Error' },
+      { id: 'd', text: 'None', textUz: 'None' },
+    ],
+    explanation: 'These are different types: integer vs string',
+    explanationUz: 'Ular turli xil: butun son va string',
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+  {
+    id: 'py-q10',
+    question: 'Which is a Python loop?',
+    questionUz: 'Python-da loop:',
+    options: [
+      { id: 'a', text: 'for', textUz: 'for', isCorrect: true },
+      { id: 'b', text: 'loop', textUz: 'loop' },
+      { id: 'c', text: 'repeat', textUz: 'repeat' },
+      { id: 'd', text: 'iterate', textUz: 'iterate' },
+    ],
+    explanation: 'for and while are the two main loop types in Python',
+    explanationUz: 'for va while - Python-dagi ikkita asosiy loop turi',
+    xpReward: 10,
+    category: 'Python Asoslari',
+  },
+
+  // Web Asoslari - 8 savol
+  {
+    id: 'web-q1',
+    question: 'What is HTML?',
+    questionUz: 'HTML nima?',
+    options: [
+      { id: 'a', text: 'Programming language', textUz: 'Dasturlash tili' },
+      { id: 'b', text: 'Markup language', textUz: 'Belgilash tili', isCorrect: true },
+      { id: 'c', text: 'Server', textUz: 'Server' },
+      { id: 'd', text: 'Database', textUz: 'Database' },
+    ],
+    explanation: 'HTML (HyperText Markup Language) is used to structure web pages',
+    explanationUz: 'HTML veb-sahifalarning tuzilishini yasash uchun ishlatiladi',
+    xpReward: 10,
+    category: 'Web Asoslari',
+  },
+  {
+    id: 'web-q2',
+    question: 'What does <h1> tag do?',
+    questionUz: '<h1> nima?',
+    options: [
+      { id: 'a', text: 'Paragraph', textUz: 'Paragraph' },
+      { id: 'b', text: 'Heading', textUz: 'Heading', isCorrect: true },
+      { id: 'c', text: 'Link', textUz: 'Link' },
+      { id: 'd', text: 'Button', textUz: 'Button' },
+    ],
+    explanation: '<h1> is the largest heading tag for main titles',
+    explanationUz: '<h1> - bosh sarchashma uchun eng katta sarlavha tegi',
+    xpReward: 10,
+    category: 'Web Asoslari',
+  },
+  {
+    id: 'web-q3',
+    question: 'What does CSS do?',
+    questionUz: 'CSS nima qiladi?',
+    options: [
+      { id: 'a', text: 'Backend', textUz: 'Backend' },
+      { id: 'b', text: 'Styling', textUz: 'Styling', isCorrect: true },
+      { id: 'c', text: 'Database', textUz: 'Database' },
+      { id: 'd', text: 'Security', textUz: 'Security' },
+    ],
+    explanation: 'CSS (Cascading Style Sheets) handles the visual styling of web pages',
+    explanationUz: 'CSS veb-sahifalarning ko\'rinishini boshqaradi',
+    xpReward: 10,
+    category: 'Web Asoslari',
+  },
+  {
+    id: 'web-q4',
+    question: 'What is the <a> tag for?',
+    questionUz: '<a> tag nima uchun?',
+    options: [
+      { id: 'a', text: 'Image', textUz: 'Rasm' },
+      { id: 'b', text: 'Link', textUz: 'Link', isCorrect: true },
+      { id: 'c', text: 'Video', textUz: 'Video' },
+      { id: 'd', text: 'Style', textUz: 'Style' },
+    ],
+    explanation: '<a> tag creates hyperlinks to other pages or URLs',
+    explanationUz: '<a> tegi boshqa sahifalarga havola yaratadi',
+    xpReward: 10,
+    category: 'Web Asoslari',
+  },
+  {
+    id: 'web-q5',
+    question: 'Where does JavaScript run?',
+    questionUz: 'JavaScript qayerda ishlaydi?',
+    options: [
+      { id: 'a', text: 'Only on server', textUz: 'Faqat serverda' },
+      { id: 'b', text: 'In browser', textUz: 'Browserda', isCorrect: true },
+      { id: 'c', text: 'In database', textUz: "Database'da" },
+      { id: 'd', text: 'In CSS', textUz: 'CSS ichida' },
+    ],
+    explanation: 'JavaScript primarily runs on the client-side in web browsers',
+    explanationUz: 'JavaScript asosan browserda ishlaydi',
+    xpReward: 10,
+    category: 'Web Asoslari',
+  },
+  {
+    id: 'web-q6',
+    question: 'What does <img> tag do?',
+    questionUz: '<img> nima qiladi?',
+    options: [
+      { id: 'a', text: 'Text', textUz: 'Text' },
+      { id: 'b', text: 'Displays images', textUz: 'Image ko\'rsatadi', isCorrect: true },
+      { id: 'c', text: 'Audio', textUz: 'Audio' },
+      { id: 'd', text: 'Link', textUz: 'Link' },
+    ],
+    explanation: '<img> tag embeds images in web pages',
+    explanationUz: '<img> tegi veb-sahifalarga rasmlarni joylashtiradadi',
+    xpReward: 10,
+    category: 'Web Asoslari',
+  },
+  {
+    id: 'web-q7',
+    question: 'What is Frontend?',
+    questionUz: 'Frontend nima?',
+    options: [
+      { id: 'a', text: 'Server', textUz: 'Server' },
+      { id: 'b', text: 'User-facing part', textUz: "User ko'radigan qism", isCorrect: true },
+      { id: 'c', text: 'Database', textUz: 'Database' },
+      { id: 'd', text: 'API', textUz: 'API' },
+    ],
+    explanation: 'Frontend is everything the user sees and interacts with in the browser',
+    explanationUz: 'Frontend foydalanuvchi browserda ko\'radigan barcha narsadir',
+    xpReward: 10,
+    category: 'Web Asoslari',
+  },
+  {
+    id: 'web-q8',
+    question: 'What is Backend?',
+    questionUz: 'Backend nima?',
+    options: [
+      { id: 'a', text: 'Design', textUz: 'Dizayn' },
+      { id: 'b', text: 'Server part', textUz: 'Server qismi', isCorrect: true },
+      { id: 'c', text: 'CSS', textUz: 'CSS' },
+      { id: 'd', text: 'HTML', textUz: 'HTML' },
+    ],
+    explanation: 'Backend is the server-side logic that handles data and processing',
+    explanationUz: "Backend - ma'lumotlarni boshqaradigan server qismi",
+    xpReward: 10,
+    category: 'Web Asoslari',
+  },
+
+  // JavaScript Sintaksisi - 12 savol
+  {
+    id: 'js-q1',
+    question: 'How do you create a variable in JavaScript?',
+    questionUz: 'Variable yaratish:',
+    options: [
+      { id: 'a', text: 'var x = 5', textUz: 'var x = 5', isCorrect: true },
+      { id: 'b', text: 'int x = 5', textUz: 'int x = 5' },
+      { id: 'c', text: 'x := 5', textUz: 'x := 5' },
+      { id: 'd', text: 'make x = 5', textUz: 'make x = 5' },
+    ],
+    explanation: 'JavaScript uses var, let, or const to declare variables',
+    explanationUz: 'JavaScript var, let yoki const bilan o\'zgaruvchi e\'lon qiladi',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q2',
+    question: 'How do you output to console?',
+    questionUz: 'Console output:',
+    options: [
+      { id: 'a', text: 'print()', textUz: 'print()' },
+      { id: 'b', text: 'console.log()', textUz: 'console.log()', isCorrect: true },
+      { id: 'c', text: 'echo()', textUz: 'echo()' },
+      { id: 'd', text: 'show()', textUz: 'show()' },
+    ],
+    explanation: 'console.log() is used to output values to the browser console',
+    explanationUz: 'console.log() browserning konsoliga natija chiqaradi',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q3',
+    question: 'What is a string?',
+    questionUz: 'String:',
+    options: [
+      { id: 'a', text: '123', textUz: '123' },
+      { id: 'b', text: '"Hello"', textUz: '"Hello"', isCorrect: true },
+      { id: 'c', text: 'true', textUz: 'true' },
+      { id: 'd', text: 'null', textUz: 'null' },
+    ],
+    explanation: 'A string is text data enclosed in quotes',
+    explanationUz: 'String - tirnoqlar ichiga olgan matn ma\'lumoti',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q4',
+    question: 'What does === mean?',
+    questionUz: '=== nima?',
+    options: [
+      { id: 'a', text: 'Not equal', textUz: 'Teng emas' },
+      { id: 'b', text: 'Strict equality', textUz: 'Strict tenglik', isCorrect: true },
+      { id: 'c', text: 'Addition', textUz: 'Qo\'shish' },
+      { id: 'd', text: 'Error', textUz: 'Error' },
+    ],
+    explanation: '=== checks for equality without type conversion',
+    explanationUz: '=== tur almashmasdan tenglikni tekshiradi',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q5',
+    question: 'How do you define a function?',
+    questionUz: 'Function:',
+    options: [
+      { id: 'a', text: 'function test(){}', textUz: 'function test(){}', isCorrect: true },
+      { id: 'b', text: 'func test()', textUz: 'func test()' },
+      { id: 'c', text: 'def test()', textUz: 'def test()' },
+      { id: 'd', text: 'fn test()', textUz: 'fn test()' },
+    ],
+    explanation: 'JavaScript uses the function keyword to declare functions',
+    explanationUz: 'JavaScript function kalit so\'zi bilan funksiya e\'lon qiladi',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q6',
+    question: 'How is an array created?',
+    questionUz: 'Array:',
+    options: [
+      { id: 'a', text: '{1,2}', textUz: '{1,2}' },
+      { id: 'b', text: '[1,2]', textUz: '[1,2]', isCorrect: true },
+      { id: 'c', text: '(1,2)', textUz: '(1,2)' },
+      { id: 'd', text: '<1,2>', textUz: '<1,2>' },
+    ],
+    explanation: 'Arrays are created using square brackets []',
+    explanationUz: 'Array\'lar kvadrat qavslar [] bilan yaratiladi',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q7',
+    question: 'What does typeof 5 return?',
+    questionUz: 'typeof 5',
+    options: [
+      { id: 'a', text: 'string', textUz: 'string' },
+      { id: 'b', text: 'number', textUz: 'number', isCorrect: true },
+      { id: 'c', text: 'int', textUz: 'int' },
+      { id: 'd', text: 'bool', textUz: 'bool' },
+    ],
+    explanation: 'typeof returns the data type. 5 is a number',
+    explanationUz: 'typeof ma\'lumot turini qaytaradi. 5 - raqam',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q8',
+    question: 'What is let?',
+    questionUz: 'let nima?',
+    options: [
+      { id: 'a', text: 'constant', textUz: 'constant' },
+      { id: 'b', text: 'variable keyword', textUz: 'variable keyword', isCorrect: true },
+      { id: 'c', text: 'function', textUz: 'function' },
+      { id: 'd', text: 'array', textUz: 'array' },
+    ],
+    explanation: 'let is used to declare variables with block scope',
+    explanationUz: 'let - block-scope bilan o\'zgaruvchi e\'lon qilish',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q9',
+    question: 'What is const?',
+    questionUz: 'const nima?',
+    options: [
+      { id: 'a', text: 'variable', textUz: "o'zgaruvchi" },
+      { id: 'b', text: 'constant value', textUz: "o'zgarmas qiymat", isCorrect: true },
+      { id: 'c', text: 'function', textUz: 'function' },
+      { id: 'd', text: 'loop', textUz: 'loop' },
+    ],
+    explanation: 'const is used to declare constants that cannot be reassigned',
+    explanationUz: 'const - qayta tayinlash mumkin bo\'lmagan o\'zgarmas qiymat',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q10',
+    question: 'What is if?',
+    questionUz: 'if nima?',
+    options: [
+      { id: 'a', text: 'loop', textUz: 'loop' },
+      { id: 'b', text: 'conditional statement', textUz: 'shart operatori', isCorrect: true },
+      { id: 'c', text: 'array', textUz: 'array' },
+      { id: 'd', text: 'function', textUz: 'function' },
+    ],
+    explanation: 'if statement is used to execute code based on conditions',
+    explanationUz: 'if - shart asosida kod bajaradigan operator',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q11',
+    question: 'What is the difference between == and ===?',
+    questionUz: '== vs ===',
+    options: [
+      { id: 'a', text: 'No difference', textUz: "farqi yo'q" },
+      { id: 'b', text: '=== is strict', textUz: '=== strict', isCorrect: true },
+      { id: 'c', text: '== is strict', textUz: '== strict' },
+      { id: 'd', text: 'Both are false', textUz: 'ikkalasi ham false' },
+    ],
+    explanation: '=== checks type and value, while == only checks value',
+    explanationUz: '=== tur va qiymatni tekshiradi, == faqat qiymatni',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+  {
+    id: 'js-q12',
+    question: 'Where does JavaScript run?',
+    questionUz: 'JS qayerda ishlaydi?',
+    options: [
+      { id: 'a', text: 'Only backend', textUz: 'faqat backend' },
+      { id: 'b', text: 'In browser', textUz: 'browserda', isCorrect: true },
+      { id: 'c', text: 'Only server', textUz: 'faqat server' },
+      { id: 'd', text: 'Only in CSS', textUz: 'faqat CSS' },
+    ],
+    explanation: 'JavaScript primarily runs in the browser for client-side logic',
+    explanationUz: 'JavaScript asosan browserda client-side logika uchun ishlaydi',
+    xpReward: 10,
+    category: 'JavaScript Sintaksisi',
+  },
+];
+
+export const QUIZ_CATEGORIES = [
+  'Python Asoslari',
+  'Web Asoslari',
+  'JavaScript Sintaksisi',
+];
+
+export function getQuizzesByCategory(category: string): QuizQuestion[] {
+  return QUIZ_QUESTIONS.filter((q) => q.category === category);
+}
+
+export function getRandomQuiz(count: number = 5): QuizQuestion[] {
+  const shuffled = [...QUIZ_QUESTIONS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+export function getQuizById(id: string): QuizQuestion | undefined {
+  return QUIZ_QUESTIONS.find((q) => q.id === id);
+}
+
+export function getQuizStats() {
+  return {
+    totalQuestions: QUIZ_QUESTIONS.length,
+    totalXP: QUIZ_QUESTIONS.reduce((sum, q) => sum + q.xpReward, 0),
+    categories: QUIZ_CATEGORIES,
+    questionsByCategory: QUIZ_CATEGORIES.map((cat) => ({
+      category: cat,
+      count: getQuizzesByCategory(cat).length,
+    })),
+  };
+}

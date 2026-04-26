@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { OnboardingProvider } from '@/lib/onboarding-context'
 import { UserProvider } from '@/lib/user-context'
+import { LanguageProvider } from '@/lib/language-context'
 import { NavBar } from '@/components/loopify/NavBar'
 import './globals.css'
 
@@ -40,12 +41,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased bg-background text-foreground min-h-screen">
-        <OnboardingProvider>
-          <UserProvider>
-            {children}
-            <NavBar />
-          </UserProvider>
-        </OnboardingProvider>
+        <LanguageProvider>
+          <OnboardingProvider>
+            <UserProvider>
+              {children}
+              <NavBar />
+            </UserProvider>
+          </OnboardingProvider>
+        </LanguageProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
