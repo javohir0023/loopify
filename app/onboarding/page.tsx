@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '@/lib/onboarding-context';
 import { useLanguage } from '@/lib/language-context';
@@ -63,7 +64,16 @@ export default function OnboardingPage() {
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold gradient-text mb-2">Loopify</h1>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/loopify-logo.png"
+              alt="Loopify Logo"
+              width={80}
+              height={80}
+              className="rounded-lg"
+              priority
+            />
+          </div>
           <p className="text-muted-foreground">Gamifikatsiya va kundalik tanlovlar bilan dasturlashni o'rganing</p>
         </div>
 

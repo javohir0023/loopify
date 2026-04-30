@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/language-context';
 import { QUIZ_QUESTIONS, QUIZ_CATEGORIES, getQuizzesByCategory } from '@/lib/quiz-questions';
 import { GradientCard } from '@/components/loopify/GradientCard';
 import { GlowButton } from '@/components/loopify/GlowButton';
+import { updateStreakAfterQuiz, getStreakData, type StreakData } from '@/lib/streak-utils';
+import { addXP, getXPData, type XPData } from '@/lib/xp-utils';
 
 type QuizState = 'categories' | 'questions' | 'results';
 
@@ -21,6 +23,15 @@ export default function QuizPage() {
   const { language } = useLanguage();
   const [state, setState] = useState<QuizState>('categories');
   const [session, setSession] = useState<QuizSession | null>(null);
+  const [streak, setStreak] = useState<StreakData | null>(null);
+  const [streakAnimation, setStreakAnimation] = useState(false);
+  const [xpData, setXPData] = useState<XPData | null>(null);
+  const [xpAnimation, setXPAnimation] = useState(false);
+
+  useEffect(() => {
+    setStreak(getStreakData());
+    setXPData(getXPData());
+  }, []);
 
   const handleSelectCategory = (category: string) => {
     const questions = getQuizzesByCategory(category);
@@ -51,6 +62,18 @@ export default function QuizPage() {
       setSession(newSession);
     } else {
       setSession(newSession);
+      // Streakni update qil va animatsiya boshla
+      const newStreak = updateStreakAfterQuiz();
+      setStreak(newStreak);
+      setStreakAnimation(true);
+      
+      // XP-ni add qil
+      const newXPData = addXP(newSession.totalXP);
+      setXPData(newXPData);
+      setXPAnimation(true);
+      setTimeout(() => setXPAnimation(false), 1000);
+      
+      setTimeout(() => setStreakAnimation(false), 1000);
       setState('results');
     }
   };
@@ -65,12 +88,34 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen bg-background pb-20">
         <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-border p-4">
-          <h1 className="text-2xl font-bold gradient-text">
-            {language === 'uz' ? 'Quizlar' : 'Quizzes'}
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            {language === 'uz' ? 'Bilimingizni sinab ko\'ring va XP oling' : 'Test your knowledge and earn XP'}
-          </p>
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h1 className="text-2xl font-bold gradient-text">
+                {language === 'uz' ? 'Quizlar' : 'Quizzes'}
+              </h1>
+              <div className="flex items-center gap-4">
+                {xpData && (
+                  <div className={`text-center transition-transform ${xpAnimation ? 'scale-110' : 'scale-100'}`}>
+                    <p className="text-xs text-muted-foreground">
+                      {language === 'uz' ? 'Umumiy XP' : 'Total XP'}
+                    </p>
+                    <p className="text-2xl font-bold text-accent">⭐ {xpData.total}</p>
+                  </div>
+                )}
+                {streak && (
+                  <div className={`text-center transition-transform ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
+                    <p className="text-xs text-muted-foreground">
+                      {language === 'uz' ? 'Ketma-ketlik' : 'Streak'}
+                    </p>
+                    <p className="text-2xl font-bold text-primary">🔥 {streak.current}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {language === 'uz' ? 'Bilimingizni sinab ko\'ring va XP oling' : 'Test your knowledge and earn XP'}
+            </p>
+          </div>
         </div>
 
         <div className="p-4 max-w-2xl mx-auto space-y-4">
@@ -210,6 +255,41 @@ export default function QuizPage() {
                 </p>
                 <p className="text-3xl font-bold text-primary">+{session.totalXP}</p>
               </div>
+
+              {xpData && (
+                <div className={`bg-accent/20 border-2 border-accent rounded-lg p-4 transition-all transform ${xpAnimation ? 'scale-105 shadow-lg shadow-accent/50' : 'scale-100'}`}>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    {language === 'uz' ? 'Umumiy XP' : 'Total XP'}
+                  </p>
+                  <p className="text-3xl font-bold text-accent">⭐ {xpData.total}</p>
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-muted-foreground">
+                        {language === 'uz' ? `Daraja ${xpData.level}` : `Level ${xpData.level}`}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{xpData.progress}%</span>
+                    </div>
+                    <div className="w-full bg-border rounded-full h-2">
+                      <div
+                        className="bg-accent h-2 rounded-full transition-all"
+                        style={{ width: `${xpData.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {streak && (
+                <div className={`bg-primary/20 border-2 border-primary rounded-lg p-4 transition-all transform ${streakAnimation ? 'scale-105 shadow-lg shadow-primary/50' : 'scale-100'}`}>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    {language === 'uz' ? 'Hozirgi Ketma-ketlik' : 'Current Streak'}
+                  </p>
+                  <p className="text-3xl font-bold text-primary">🔥 {streak.current}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {language === 'uz' ? `Eng uzun ketma-ketlik: ${streak.longest}` : `Longest streak: ${streak.longest}`}
+                  </p>
+                </div>
+              )}
             </div>
 
             <GlowButton onClick={handleBackToCategories} className="w-full">
