@@ -39,7 +39,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-border p-4">
-        <h1 className="text-2xl font-bold gradient-text">{t.nav.profile}</h1>
+        <h1 className="text-2xl font-bold gradient-text">{language === 'uz' ? 'Profil' : 'Profile'}</h1>
         <p className="text-xs text-muted-foreground mt-1">Sizning o\'quv statistikangiz</p>
       </div>
 
