@@ -1,5 +1,4 @@
 import { streamText } from 'ai'
-import { openai } from '@ai-sdk/openai'
 
 const SYSTEM_PROMPT_UZ = `Sen Loopy - Loopify platformasining AI dasturlash yordamchisisisan. Foydalanuvchilarga Python, Web Dasturlash (HTML, CSS, JavaScript), va Sun'iy Intellekt haqida yordam berasan.
 
@@ -29,7 +28,7 @@ export async function POST(req: Request) {
     const systemPrompt = language === 'uz' ? SYSTEM_PROMPT_UZ : SYSTEM_PROMPT_EN
 
     const result = streamText({
-      model: openai('gpt-4o-mini'),
+      model: 'anthropic/claude-haiku-4.5',
       system: systemPrompt,
       messages: messages.map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',
