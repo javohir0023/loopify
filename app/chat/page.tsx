@@ -1,38 +1,22 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
-import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
+import { useState, useRef, useEffect } from 'react'
 import { useLanguage } from '@/lib/language-context'
 import { GradientCard } from '@/components/loopify/GradientCard'
 import { GlowButton } from '@/components/loopify/GlowButton'
 
-function getMessageText(message: { parts?: Array<{ type: string; text?: string }> }): string {
-  if (!message.parts || !Array.isArray(message.parts)) return ''
-  return message.parts
-    .filter((p): p is { type: 'text'; text: string } => p.type === 'text' && typeof p.text === 'string')
-    .map((p) => p.text)
-    .join('')
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
 }
 
 export default function ChatPage() {
   const { language } = useLanguage()
+  const [input, setInput] = useState('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  const { messages, input, setInput, sendMessage, status, setMessages } = useChat({
-    transport: new DefaultChatTransport({
-      api: '/api/chat',
-      prepareSendMessagesRequest: ({ id, messages }) => ({
-        body: {
-          id,
-          messages,
-          language,
-        },
-      }),
-    }),
-  })
-
-  const isLoading = status === 'streaming' || status === 'submitted'
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -52,54 +36,149 @@ export default function ChatPage() {
       {
         id: 'greeting',
         role: 'assistant',
-        parts: [{ type: 'text', text: greeting }],
+        content: greeting,
       },
     ])
-  }, [language, setMessages])
+  }, [language])
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
-    sendMessage({ text: input })
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input.trim(),
+    }
+
+    setMessages((prev) => [...prev, userMessage])
     setInput('')
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          language,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('API error')
+      }
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let assistantContent = ''
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: '',
+      }
+
+      setMessages((prev) => [...prev, assistantMessage])
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (trimmed.startsWith('data:')) {
+              const data = trimmed.slice(5).trim()
+              if (data === '[DONE]') continue
+              try {
+                const parsed = JSON.parse(data)
+                if (parsed.type === 'text-delta' && parsed.delta) {
+                  assistantContent += parsed.delta
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantMessage.id ? { ...m, content: assistantContent } : m
+                    )
+                  )
+                }
+              } catch {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content:
+          language === 'uz'
+            ? 'Kechirasiz, hozir javob bera olmayapman. Mentorlarimiz tez orada sizga yordam berishadi. Iltimos, keyinroq urinib ko\'ring yoki kurslarimizga qarang!'
+            : 'Sorry, I cannot respond right now. Our mentors will help you soon. Please try again later or check out our courses!',
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-background pb-20 flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-border p-4">
-        <h1 className="text-2xl font-bold gradient-text">
-          {language === 'uz' ? 'Loopy AI Yordamchi' : 'Loopy AI Assistant'}
-        </h1>
-        <p className="text-xs text-muted-foreground mt-1">
-          {language === 'uz' ? 'Claude AI tomonidan quvvatlanadi' : 'Powered by Claude AI'}
-        </p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold">
+            L
+          </div>
+          <div>
+            <h1 className="text-xl font-bold gradient-text">
+              {language === 'uz' ? 'Loopy AI Yordamchi' : 'Loopy AI Assistant'}
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              {language === 'uz' ? 'OpenAI GPT-4o tomonidan quvvatlanadi' : 'Powered by OpenAI GPT-4o'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Menu Info */}
+      <div className="px-4 py-2 bg-card/50 border-b border-border">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <span>
+            {language === 'uz'
+              ? 'AI yordamchi faol - Python, Web, AI haqida savol bering'
+              : 'AI assistant active - Ask about Python, Web, AI'}
+          </span>
+        </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 p-4 space-y-4 max-w-2xl mx-auto w-full overflow-y-auto">
-        {messages.map((message) => {
-          const text = getMessageText(message)
-          if (!text) return null
-
-          return (
-            <div
-              key={message.id}
-              className={`flex ${message.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
+          >
+            {message.role === 'assistant' && (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold text-sm mr-2 flex-shrink-0 mt-1">
+                L
+              </div>
+            )}
+            <GradientCard
+              variant={message.role === 'assistant' ? 'blue' : 'pink'}
+              className="max-w-sm p-3"
             >
-              {message.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold text-sm mr-2 flex-shrink-0 mt-1">
-                  L
-                </div>
-              )}
-              <GradientCard
-                variant={message.role === 'assistant' ? 'blue' : 'pink'}
-                className="max-w-sm p-3"
-              >
-                <p className="text-sm whitespace-pre-wrap">{text}</p>
-              </GradientCard>
-            </div>
-          )
-        })}
+              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+            </GradientCard>
+          </div>
+        ))}
         {isLoading && messages[messages.length - 1]?.role === 'user' && (
           <div className="flex justify-start">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold text-sm mr-2 flex-shrink-0">
@@ -108,7 +187,7 @@ export default function ChatPage() {
             <GradientCard variant="blue" className="p-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
-                  {language === 'uz' ? 'Yozmoqda' : 'Typing'}
+                  {language === 'uz' ? 'Mentorlarimiz javob tayyorlamoqda...' : 'Our mentors are preparing an answer...'}
                 </span>
                 <span className="flex gap-1">
                   <span
@@ -153,7 +232,9 @@ export default function ChatPage() {
           </GlowButton>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          {language === 'uz' ? 'Har qanday dasturlash savolini bering' : 'Ask any programming question'}
+          {language === 'uz'
+            ? 'Mentorlarimiz har qanday dasturlash savoliga javob berishadi'
+            : 'Our mentors will answer any programming question'}
         </p>
       </div>
     </div>

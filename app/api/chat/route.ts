@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages } from 'ai'
+import { streamText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 
 const SYSTEM_PROMPT_UZ = `Sen Loopy - Loopify platformasining AI dasturlash yordamchisisisan. Foydalanuvchilarga Python, Web Dasturlash (HTML, CSS, JavaScript), va Sun'iy Intellekt haqida yordam berasan.
@@ -9,7 +9,8 @@ Qoidalar:
 - Agar savol dasturlash bilan bog'liq bo'lmasa, dasturlashga qaytarishga urin
 - O'zbek tilida so'rashsa o'zbek tilida javob ber
 - Friendly va rag'batlantiruvchi bo'l
-- Loopify o'quv platformasida Python, Web va AI kurslar borligini esga ol`
+- Loopify o'quv platformasida Python, Web va AI kurslar borligini esga ol
+- Sen Loopify mentorlarining AI yordamchisisisan`
 
 const SYSTEM_PROMPT_EN = `You are Loopy - the AI coding assistant for Loopify learning platform. Help users with Python, Web Development (HTML, CSS, JavaScript), and AI topics.
 
@@ -18,18 +19,30 @@ Rules:
 - Show code examples in backticks
 - If question is not related to programming, try to redirect to programming topics
 - Be friendly and encouraging
-- Mention that Loopify has Python, Web, and AI courses`
+- Mention that Loopify has Python, Web, and AI courses
+- You are an AI assistant representing Loopify mentors`
 
 export async function POST(req: Request) {
-  const { messages, language } = await req.json()
+  try {
+    const { messages, language } = await req.json()
 
-  const systemPrompt = language === 'uz' ? SYSTEM_PROMPT_UZ : SYSTEM_PROMPT_EN
+    const systemPrompt = language === 'uz' ? SYSTEM_PROMPT_UZ : SYSTEM_PROMPT_EN
 
-  const result = streamText({
-    model: openai('gpt-4o-mini'),
-    system: systemPrompt,
-    messages: await convertToModelMessages(messages),
-  })
+    const result = streamText({
+      model: openai('gpt-4o-mini'),
+      system: systemPrompt,
+      messages: messages.map((m: { role: string; content: string }) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
+    })
 
-  return result.toUIMessageStreamResponse()
+    return result.toUIMessageStreamResponse()
+  } catch (error) {
+    console.error('[v0] Chat API error:', error)
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
 }
