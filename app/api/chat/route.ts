@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const systemPrompt = language === 'uz' ? SYSTEM_PROMPT_UZ : SYSTEM_PROMPT_EN
 
   const result = streamText({
-    model: 'anthropic/claude-haiku-4-5',
+    model: 'anthropic/claude-haiku-4.5',
     system: systemPrompt,
     messages: await convertToModelMessages(messages),
   })
