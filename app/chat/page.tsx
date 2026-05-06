@@ -1,112 +1,67 @@
-'use client';
+'use client'
 
-import { useState, useRef, useEffect } from 'react';
-import { useLanguage } from '@/lib/language-context';
-import { GradientCard } from '@/components/loopify/GradientCard';
-import { GlowButton } from '@/components/loopify/GlowButton';
+import { useRef, useEffect } from 'react'
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
+import { useLanguage } from '@/lib/language-context'
+import { GradientCard } from '@/components/loopify/GradientCard'
+import { GlowButton } from '@/components/loopify/GlowButton'
 
-interface Message {
-  id: string;
-  text: string;
-  isBot: boolean;
-}
-
-interface ConversationMessage {
-  role: 'user' | 'assistant';
-  content: string;
+function getMessageText(message: { parts?: Array<{ type: string; text?: string }> }): string {
+  if (!message.parts || !Array.isArray(message.parts)) return ''
+  return message.parts
+    .filter((p): p is { type: 'text'; text: string } => p.type === 'text' && typeof p.text === 'string')
+    .map((p) => p.text)
+    .join('')
 }
 
 export default function ChatPage() {
-  const { language } = useLanguage();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { language } = useLanguage()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const { messages, input, setInput, sendMessage, status, setMessages } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      prepareSendMessagesRequest: ({ id, messages }) => ({
+        body: {
+          id,
+          messages,
+          language,
+        },
+      }),
+    }),
+  })
+
+  const isLoading = status === 'streaming' || status === 'submitted'
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    scrollToBottom()
+  }, [messages])
 
   useEffect(() => {
     const greeting =
       language === 'uz'
         ? 'Salom! Men Loopy, sizning AI kodlash yordamchingizman. Python, Web Dasturlash, JavaScript va boshqa dasturlash mavzulari haqida har qanday savolingizni bering!'
-        : "Hi! I'm Loopy, your AI coding assistant. Ask me anything about Python, Web Development, JavaScript, and more!";
+        : "Hi! I'm Loopy, your AI coding assistant. Ask me anything about Python, Web Development, JavaScript, and more!"
 
-    setMessages([{ id: '1', text: greeting, isBot: true }]);
-    setConversationHistory([]);
-  }, [language]);
+    setMessages([
+      {
+        id: 'greeting',
+        role: 'assistant',
+        parts: [{ type: 'text', text: greeting }],
+      },
+    ])
+  }, [language, setMessages])
 
-  const handleSendMessage = async () => {
-    if (!input.trim() || loading) return;
-
-    const userText = input.trim();
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: userText,
-      isBot: false,
-    };
-
-    const newHistory: ConversationMessage[] = [
-      ...conversationHistory,
-      { role: 'user', content: userText },
-    ];
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setLoading(true);
-    setConversationHistory(newHistory);
-
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/chat-ai`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${supabaseKey}`,
-          Apikey: supabaseKey || '',
-        },
-        body: JSON.stringify({ messages: newHistory, language }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || data.error) {
-        throw new Error(data.error || 'Request failed');
-      }
-
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: data.response,
-        isBot: true,
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-      setConversationHistory((prev) => [
-        ...prev,
-        { role: 'assistant', content: data.response },
-      ]);
-    } catch (err) {
-      console.error('Chat error:', err);
-      const errorText =
-        language === 'uz'
-          ? 'Kechirasiz, hozir javob bera olmayapman. Keyinroq urinib ko\'ring.'
-          : 'Sorry, I could not respond right now. Please try again later.';
-      setMessages((prev) => [
-        ...prev,
-        { id: (Date.now() + 1).toString(), text: errorText, isBot: true },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleSendMessage = () => {
+    if (!input.trim() || isLoading) return
+    sendMessage({ text: input })
+    setInput('')
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20 flex flex-col">
@@ -122,25 +77,30 @@ export default function ChatPage() {
 
       {/* Messages */}
       <div className="flex-1 p-4 space-y-4 max-w-2xl mx-auto w-full overflow-y-auto">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
-          >
-            {message.isBot && (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold text-sm mr-2 flex-shrink-0 mt-1">
-                L
-              </div>
-            )}
-            <GradientCard
-              variant={message.isBot ? 'blue' : 'pink'}
-              className="max-w-sm p-3"
+        {messages.map((message) => {
+          const text = getMessageText(message)
+          if (!text) return null
+
+          return (
+            <div
+              key={message.id}
+              className={`flex ${message.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
             >
-              <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-            </GradientCard>
-          </div>
-        ))}
-        {loading && (
+              {message.role === 'assistant' && (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold text-sm mr-2 flex-shrink-0 mt-1">
+                  L
+                </div>
+              )}
+              <GradientCard
+                variant={message.role === 'assistant' ? 'blue' : 'pink'}
+                className="max-w-sm p-3"
+              >
+                <p className="text-sm whitespace-pre-wrap">{text}</p>
+              </GradientCard>
+            </div>
+          )
+        })}
+        {isLoading && messages[messages.length - 1]?.role === 'user' && (
           <div className="flex justify-start">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold text-sm mr-2 flex-shrink-0">
               L
@@ -151,9 +111,18 @@ export default function ChatPage() {
                   {language === 'uz' ? 'Yozmoqda' : 'Typing'}
                 </span>
                 <span className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span
+                    className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"
+                    style={{ animationDelay: '0ms' }}
+                  />
+                  <span
+                    className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"
+                    style={{ animationDelay: '150ms' }}
+                  />
+                  <span
+                    className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"
+                    style={{ animationDelay: '300ms' }}
+                  />
                 </span>
               </div>
             </GradientCard>
@@ -170,25 +139,23 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey && !loading) {
-                e.preventDefault();
-                handleSendMessage();
+              if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
+                e.preventDefault()
+                handleSendMessage()
               }
             }}
             placeholder={language === 'uz' ? 'Savolingizni kiriting...' : 'Ask me anything...'}
-            disabled={loading}
+            disabled={isLoading}
             className="flex-1 bg-input border border-border rounded-lg px-4 py-2 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary disabled:opacity-50"
           />
-          <GlowButton onClick={handleSendMessage} size="md" disabled={loading || !input.trim()}>
+          <GlowButton onClick={handleSendMessage} size="md" disabled={isLoading || !input.trim()}>
             {language === 'uz' ? 'Yuborish' : 'Send'}
           </GlowButton>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          {language === 'uz'
-            ? 'Har qanday dasturlash savolini bering'
-            : 'Ask any programming question'}
+          {language === 'uz' ? 'Har qanday dasturlash savolini bering' : 'Ask any programming question'}
         </p>
       </div>
     </div>
-  );
+  )
 }
