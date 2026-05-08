@@ -1,12 +1,26 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useLanguage } from '@/lib/language-context';
 import { GradientCard } from '@/components/loopify/GradientCard';
 import { GlowButton } from '@/components/loopify/GlowButton';
 import { StatCard } from '@/components/loopify/StatCard';
 
-type TabType = 'daily' | 'quizzes' | 'projects' | 'leaderboard';
+type TabType = 'daily' | 'games' | 'quizzes' | 'projects' | 'leaderboard';
+
+const GAMES = [
+  {
+    id: 1,
+    title: 'Road Game',
+    titleUz: 'Yo\'l O\'yini',
+    description: 'Answer quiz questions to stay on the road',
+    descriptionUz: 'Savolga javob berib yo\'ldan chiqmang',
+    icon: '🚗',
+    xp: 50,
+    href: '/gamification/road-game',
+  },
+];
 
 const DAILY_CHALLENGES = [
   { id: 1, title: 'Python Quiz', titleUz: 'Python Testi', completed: true, xp: 20 },
@@ -63,6 +77,7 @@ export default function GamificationPage() {
 
   const tabs: { id: TabType; label: string; labelUz: string; icon: string }[] = [
     { id: 'daily', label: 'Daily', labelUz: 'Kundalik', icon: '⚡' },
+    { id: 'games', label: 'Games', labelUz: 'O\'yinlar', icon: '🎮' },
     { id: 'quizzes', label: 'Quizzes', labelUz: 'Quizlar', icon: '📝' },
     { id: 'projects', label: 'Projects', labelUz: 'Loyihalar', icon: '🛠️' },
     { id: 'leaderboard', label: 'Board', labelUz: 'Reyting', icon: '🏆' },
@@ -125,6 +140,40 @@ export default function GamificationPage() {
                   {!challenge.completed && (
                     <GlowButton size="sm">{language === 'uz' ? 'Boshlash' : 'Start'}</GlowButton>
                   )}
+                </div>
+              </GradientCard>
+            ))}
+          </div>
+        )}
+
+        {/* Games */}
+        {activeTab === 'games' && (
+          <div className="space-y-4">
+            <div className="text-xs text-muted-foreground px-0 pb-2">
+              {language === 'uz' ? 'O\'yin o\'ynang va XP oling' : 'Play games and earn XP'}
+            </div>
+            {GAMES.map((game) => (
+              <GradientCard
+                key={game.id}
+                variant="purple"
+                className="p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{game.icon}</span>
+                    <div>
+                      <h3 className="font-bold text-foreground">
+                        {language === 'uz' ? game.titleUz : game.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {language === 'uz' ? game.descriptionUz : game.description}
+                      </p>
+                      <p className="text-xs text-primary mt-1">+{game.xp} XP</p>
+                    </div>
+                  </div>
+                  <Link href={game.href}>
+                    <GlowButton size="sm">{language === 'uz' ? 'O\'ynash' : 'Play'}</GlowButton>
+                  </Link>
                 </div>
               </GradientCard>
             ))}
