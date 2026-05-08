@@ -23,12 +23,13 @@ export default function CyberHighwayPage() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState<typeof QUIZ_QUESTIONS>([]);
   const [currentQuestion, setCurrentQuestion] = useState<typeof QUIZ_QUESTIONS[0] | null>(null);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [nitroActive, setNitroActive] = useState(false);
   const [screenShake, setScreenShake] = useState(false);
   const [roadPosition, setRoadPosition] = useState(0);
   const [carLane, setCarLane] = useState(1);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
   const totalQuestions = difficulty === 'easy' ? 8 : difficulty === 'medium' ? 10 : 12;
   const bossStage = questionIndex >= totalQuestions - 2;
@@ -51,49 +52,77 @@ export default function CyberHighwayPage() {
     setQuestionIndex(0);
     setCorrectAnswers(0);
     setNitroActive(false);
+    setCarLane(1);
+    setShowResult(false);
+    setIsSelecting(false);
 
+    const count = diff === 'easy' ? 8 : diff === 'medium' ? 10 : 12;
     const cyberQs = shuffleArray(CYBER_QUESTIONS);
     const otherQs = shuffleArray(ALL_QUESTIONS.filter(q => q.category !== 'Kiber Xavfsizlik'));
-    const gameQuestions = [...cyberQs, ...otherQs].slice(0, totalQuestions);
-    setQuestions(shuffleArray(gameQuestions));
+    const gameQuestions = [...cyberQs, ...otherQs].slice(0, count);
+    const shuffledQuestions = shuffleArray(gameQuestions);
+    setQuestions(shuffledQuestions);
     
     setGameState('playing');
     setTimeout(() => {
       setGameState('question');
-      setCurrentQuestion(gameQuestions[0]);
+      setCurrentQuestion(shuffledQuestions[0]);
     }, 2000);
-  }, [totalQuestions]);
+  }, []);
 
-  const handleAnswer = (answerId: string) => {
-    if (selectedAnswer) return;
-    setSelectedAnswer(answerId);
-
-    const isCorrect = currentQuestion?.options.find(o => o.id === answerId)?.isCorrect;
-
-    if (isCorrect) {
-      const baseXp = 10;
-      const comboBonus = Math.floor(combo * 2);
-      const earnedXp = baseXp + comboBonus;
+  // Handle keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameState !== 'question' || isSelecting || showResult) return;
       
-      setXp(prev => prev + earnedXp);
-      setCombo(prev => prev + 1);
-      setMaxCombo(prev => Math.max(prev, combo + 1));
-      setCorrectAnswers(prev => prev + 1);
-      
-      if (combo + 1 >= 5 && !nitroActive) {
-        setNitroActive(true);
-        setTimeout(() => setNitroActive(false), 3000);
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        selectLane(0);
+      } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        selectLane(1);
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        selectLane(2);
       }
+    };
 
-      setCarLane(currentQuestion?.options.findIndex(o => o.isCorrect) || 1);
-      setGameState('correct');
-    } else {
-      setScreenShake(true);
-      setTimeout(() => setScreenShake(false), 500);
-      setCombo(0);
-      setLives(prev => prev - 1);
-      setGameState('wrong');
-    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState, isSelecting, showResult]);
+
+  const selectLane = (laneIndex: number) => {
+    if (isSelecting || showResult || !currentQuestion) return;
+    
+    setIsSelecting(true);
+    setCarLane(laneIndex);
+
+    setTimeout(() => {
+      const options = currentQuestion.options.slice(0, 3);
+      const isCorrect = options[laneIndex]?.isCorrect;
+      setShowResult(true);
+
+      if (isCorrect) {
+        const baseXp = 10;
+        const comboBonus = Math.floor(combo * 2);
+        const earnedXp = baseXp + comboBonus;
+        
+        setXp(prev => prev + earnedXp);
+        setCombo(prev => prev + 1);
+        setMaxCombo(prev => Math.max(prev, combo + 1));
+        setCorrectAnswers(prev => prev + 1);
+        
+        if (combo + 1 >= 5 && !nitroActive) {
+          setNitroActive(true);
+          setTimeout(() => setNitroActive(false), 3000);
+        }
+
+        setGameState('correct');
+      } else {
+        setScreenShake(true);
+        setTimeout(() => setScreenShake(false), 500);
+        setCombo(0);
+        setLives(prev => prev - 1);
+        setGameState('wrong');
+      }
+    }, 400);
   };
 
   useEffect(() => {
@@ -113,7 +142,9 @@ export default function CyberHighwayPage() {
 
         setQuestionIndex(nextIndex);
         setCurrentQuestion(questions[nextIndex]);
-        setSelectedAnswer(null);
+        setCarLane(1);
+        setShowResult(false);
+        setIsSelecting(false);
         setGameState(nextIndex >= totalQuestions - 2 ? 'boss' : 'question');
         
         if (nextIndex >= totalQuestions - 2) {
@@ -125,7 +156,7 @@ export default function CyberHighwayPage() {
   }, [gameState, lives, questionIndex, questions, totalQuestions]);
 
   useEffect(() => {
-    if (gameState === 'playing' || gameState === 'question') {
+    if (gameState === 'playing' || gameState === 'question' || gameState === 'correct' || gameState === 'wrong') {
       const interval = setInterval(() => {
         setRoadPosition(prev => (prev + 1) % 100);
       }, 50);
@@ -148,162 +179,239 @@ export default function CyberHighwayPage() {
     </div>
   );
 
-  const renderRoad = () => (
-    <div className="absolute inset-0 overflow-hidden">
-      {/* Cyber city background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0015] via-[#1a0030] to-[#0d001a]" />
-      
-      {/* Stars */}
-      {[...Array(50)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-white rounded-full"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 40}%`,
-            opacity: Math.random() * 0.8,
-          }}
-          animate={{ opacity: [0.2, 0.8, 0.2] }}
-          transition={{ duration: 2 + Math.random() * 2, repeat: Infinity }}
-        />
-      ))}
-
-      {/* City silhouette */}
-      <div className="absolute bottom-40 left-0 right-0 h-32">
-        <svg viewBox="0 0 400 100" className="w-full h-full" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="cityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1a0030" />
-              <stop offset="100%" stopColor="#0d001a" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M0,100 L0,60 L20,60 L20,40 L40,40 L40,50 L60,50 L60,30 L80,30 L80,45 L100,45 L100,20 L120,20 L120,55 L140,55 L140,35 L160,35 L160,50 L180,50 L180,25 L200,25 L200,40 L220,40 L220,15 L240,15 L240,50 L260,50 L260,30 L280,30 L280,55 L300,55 L300,40 L320,40 L320,60 L340,60 L340,45 L360,45 L360,65 L380,65 L380,50 L400,50 L400,100 Z"
-            fill="url(#cityGrad)"
+  const renderRoad = () => {
+    const options = currentQuestion?.options.slice(0, 3) || [];
+    
+    return (
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Cyber city background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0015] via-[#1a0030] to-[#0d001a]" />
+        
+        {/* Stars */}
+        {[...Array(50)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 40}%`,
+              opacity: Math.random() * 0.8,
+            }}
+            animate={{ opacity: [0.2, 0.8, 0.2] }}
+            transition={{ duration: 2 + Math.random() * 2, repeat: Infinity }}
           />
-          {/* Building windows */}
-          {[...Array(20)].map((_, i) => (
-            <motion.rect
-              key={i}
-              x={20 + i * 18}
-              y={30 + Math.random() * 40}
-              width="3"
-              height="4"
-              fill="#00ffff"
-              opacity={0.6}
-              animate={{ opacity: [0.3, 0.8, 0.3] }}
-              transition={{ duration: 1 + Math.random(), repeat: Infinity }}
-            />
-          ))}
-        </svg>
-      </div>
+        ))}
 
-      {/* Road */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] h-48 perspective-[500px]">
-        <div 
-          className="relative w-full h-full"
-          style={{ transform: 'rotateX(60deg)', transformOrigin: 'bottom center' }}
-        >
-          {/* Road surface */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e] to-[#0f0f1a] border-l-4 border-r-4 border-cyan-500/50">
-            {/* Lane dividers */}
-            <div className="absolute left-1/3 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-cyan-400 to-transparent opacity-50" />
-            <div className="absolute left-2/3 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-cyan-400 to-transparent opacity-50" />
-            
-            {/* Moving road lines */}
-            {[...Array(8)].map((_, i) => (
-              <motion.div
+        {/* City silhouette */}
+        <div className="absolute bottom-40 left-0 right-0 h-32">
+          <svg viewBox="0 0 400 100" className="w-full h-full" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="cityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1a0030" />
+                <stop offset="100%" stopColor="#0d001a" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M0,100 L0,60 L20,60 L20,40 L40,40 L40,50 L60,50 L60,30 L80,30 L80,45 L100,45 L100,20 L120,20 L120,55 L140,55 L140,35 L160,35 L160,50 L180,50 L180,25 L200,25 L200,40 L220,40 L220,15 L240,15 L240,50 L260,50 L260,30 L280,30 L280,55 L300,55 L300,40 L320,40 L320,60 L340,60 L340,45 L360,45 L360,65 L380,65 L380,50 L400,50 L400,100 Z"
+              fill="url(#cityGrad)"
+            />
+            {[...Array(20)].map((_, i) => (
+              <motion.rect
                 key={i}
-                className="absolute left-1/2 -translate-x-1/2 w-4 h-8 bg-cyan-400"
-                style={{
-                  top: `${((roadPosition + i * 12.5) % 100)}%`,
-                  opacity: 0.8 - (((roadPosition + i * 12.5) % 100) / 100) * 0.6,
-                }}
+                x={20 + i * 18}
+                y={30 + Math.random() * 40}
+                width="3"
+                height="4"
+                fill="#00ffff"
+                opacity={0.6}
+                animate={{ opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 1 + Math.random(), repeat: Infinity }}
               />
             ))}
-          </div>
+          </svg>
+        </div>
 
-          {/* Neon edge glow */}
-          <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-r from-purple-500 to-transparent blur-sm" />
-          <div className="absolute right-0 top-0 bottom-0 w-2 bg-gradient-to-l from-pink-500 to-transparent blur-sm" />
+        {/* Road */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[320px] h-56 perspective-[500px]">
+          <div 
+            className="relative w-full h-full"
+            style={{ transform: 'rotateX(55deg)', transformOrigin: 'bottom center' }}
+          >
+            {/* Road surface */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e] to-[#0f0f1a] border-l-4 border-r-4 border-cyan-500/50">
+              {/* Lane dividers */}
+              <div className="absolute left-[33%] top-0 bottom-0 w-1 border-l-2 border-dashed border-cyan-400/50" />
+              <div className="absolute left-[66%] top-0 bottom-0 w-1 border-l-2 border-dashed border-cyan-400/50" />
+              
+              {/* Moving road lines */}
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute left-1/2 -translate-x-1/2 w-4 h-8 bg-cyan-400"
+                  style={{
+                    top: `${((roadPosition + i * 12.5) % 100)}%`,
+                    opacity: 0.8 - (((roadPosition + i * 12.5) % 100) / 100) * 0.6,
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Neon edge glow */}
+            <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-r from-purple-500 to-transparent blur-sm" />
+            <div className="absolute right-0 top-0 bottom-0 w-2 bg-gradient-to-l from-pink-500 to-transparent blur-sm" />
+          </div>
+        </div>
+
+        {/* Options on road (in front of car) */}
+        {gameState === 'question' && currentQuestion && (
+          <div className="absolute bottom-44 left-1/2 -translate-x-1/2 w-[280px] flex gap-2 z-10">
+            {options.map((option, i) => {
+              const isCorrect = option.isCorrect;
+              const isSelected = carLane === i && showResult;
+              
+              return (
+                <motion.button
+                  key={option.id}
+                  initial={{ y: -50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: i * 0.1 }}
+                  onClick={() => selectLane(i)}
+                  disabled={isSelecting || showResult}
+                  className={`flex-1 py-2 px-1 rounded-lg text-xs font-bold transition-all border-2 ${
+                    showResult
+                      ? isCorrect
+                        ? 'bg-green-500/90 border-green-400 text-white shadow-lg shadow-green-500/50'
+                        : isSelected
+                          ? 'bg-red-500/90 border-red-400 text-white shadow-lg shadow-red-500/50 animate-pulse'
+                          : 'bg-slate-800/80 border-slate-600 text-slate-400'
+                      : 'bg-black/80 border-cyan-500/70 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400 active:scale-95'
+                  }`}
+                >
+                  <div className="truncate">
+                    {language === 'uz' ? option.textUz : option.text}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Lane highlight on selection */}
+        {showResult && (
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[320px] h-56 flex pointer-events-none">
+            {[0, 1, 2].map((lane) => {
+              const options = currentQuestion?.options.slice(0, 3) || [];
+              const isCorrect = options[lane]?.isCorrect;
+              return (
+                <div 
+                  key={lane}
+                  className={`flex-1 transition-all duration-300 ${
+                    carLane === lane
+                      ? isCorrect
+                        ? 'bg-green-500/20'
+                        : 'bg-red-500/30'
+                      : ''
+                  }`}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Crash effect */}
+        {showResult && !currentQuestion?.options.slice(0, 3)[carLane]?.isCorrect && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute bottom-32 left-1/2 -translate-x-1/2 text-6xl"
+            style={{ 
+              marginLeft: carLane === 0 ? '-80px' : carLane === 2 ? '80px' : '0',
+            }}
+          >
+            💥
+          </motion.div>
+        )}
+
+        {/* Player car */}
+        <motion.div
+          className="absolute bottom-20 left-1/2"
+          animate={{
+            x: carLane === 0 ? -80 : carLane === 2 ? 80 : -32,
+            y: nitroActive ? [0, -5, 0] : 0,
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="relative">
+            {/* Car body */}
+            <div className="w-16 h-24 relative">
+              <svg viewBox="0 0 60 90" className="w-full h-full">
+                <defs>
+                  <linearGradient id="carGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#00ffff" />
+                    <stop offset="50%" stopColor="#0066ff" />
+                    <stop offset="100%" stopColor="#9900ff" />
+                  </linearGradient>
+                  <filter id="neonGlow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path
+                  d="M10,85 L10,50 Q10,40 20,35 L20,25 Q20,15 30,10 Q40,15 40,25 L40,35 Q50,40 50,50 L50,85 Q50,90 45,90 L15,90 Q10,90 10,85"
+                  fill="url(#carGrad)"
+                  filter="url(#neonGlow)"
+                />
+                <path
+                  d="M20,35 L20,25 Q20,18 30,15 Q40,18 40,25 L40,35 Z"
+                  fill="#00ffff"
+                  opacity="0.5"
+                />
+                <motion.ellipse
+                  cx="20"
+                  cy="20"
+                  rx="4"
+                  ry="3"
+                  fill="#00ffff"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 0.5, repeat: Infinity }}
+                />
+                <motion.ellipse
+                  cx="40"
+                  cy="20"
+                  rx="4"
+                  ry="3"
+                  fill="#00ffff"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 0.5, repeat: Infinity }}
+                />
+              </svg>
+            </div>
+
+            {/* Nitro effect */}
+            {nitroActive && (
+              <motion.div
+                className="absolute -bottom-4 left-1/2 -translate-x-1/2"
+                animate={{ scaleY: [1, 1.5, 1], opacity: [0.8, 1, 0.8] }}
+                transition={{ duration: 0.2, repeat: Infinity }}
+              >
+                <div className="w-8 h-12 bg-gradient-to-t from-orange-500 via-yellow-400 to-transparent blur-sm rounded-full" />
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Control hints */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-8 text-xs text-cyan-400/50">
+          <span>← A</span>
+          <span>↑ W</span>
+          <span>→ D</span>
         </div>
       </div>
-
-      {/* Player car */}
-      <motion.div
-        className="absolute bottom-16 left-1/2 -translate-x-1/2"
-        animate={{
-          x: carLane === 0 ? -60 : carLane === 2 ? 60 : 0,
-          y: nitroActive ? [0, -5, 0] : 0,
-        }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="relative">
-          {/* Car body */}
-          <div className="w-16 h-24 relative">
-            <svg viewBox="0 0 60 90" className="w-full h-full">
-              <defs>
-                <linearGradient id="carGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#00ffff" />
-                  <stop offset="50%" stopColor="#0066ff" />
-                  <stop offset="100%" stopColor="#9900ff" />
-                </linearGradient>
-                <filter id="neonGlow">
-                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              {/* Car shape */}
-              <path
-                d="M10,85 L10,50 Q10,40 20,35 L20,25 Q20,15 30,10 Q40,15 40,25 L40,35 Q50,40 50,50 L50,85 Q50,90 45,90 L15,90 Q10,90 10,85"
-                fill="url(#carGrad)"
-                filter="url(#neonGlow)"
-              />
-              {/* Windshield */}
-              <path
-                d="M20,35 L20,25 Q20,18 30,15 Q40,18 40,25 L40,35 Z"
-                fill="#00ffff"
-                opacity="0.5"
-              />
-              {/* Headlights */}
-              <motion.ellipse
-                cx="20"
-                cy="20"
-                rx="4"
-                ry="3"
-                fill="#00ffff"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
-              />
-              <motion.ellipse
-                cx="40"
-                cy="20"
-                rx="4"
-                ry="3"
-                fill="#00ffff"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
-              />
-            </svg>
-          </div>
-
-          {/* Nitro effect */}
-          {nitroActive && (
-            <motion.div
-              className="absolute -bottom-4 left-1/2 -translate-x-1/2"
-              animate={{ scaleY: [1, 1.5, 1], opacity: [0.8, 1, 0.8] }}
-              transition={{ duration: 0.2, repeat: Infinity }}
-            >
-              <div className="w-8 h-12 bg-gradient-to-t from-orange-500 via-yellow-400 to-transparent blur-sm rounded-full" />
-            </motion.div>
-          )}
-        </div>
-      </motion.div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className={`min-h-screen bg-[#0a0015] text-white overflow-hidden relative ${screenShake ? 'animate-shake' : ''}`}>
@@ -327,7 +435,6 @@ export default function CyberHighwayPage() {
             exit={{ opacity: 0 }}
             className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-gradient-to-b from-[#0a0015] via-[#1a0030] to-[#0d001a]"
           >
-            {/* Animated background grid */}
             <div className="absolute inset-0 overflow-hidden">
               <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f10_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f10_1px,transparent_1px)] bg-[size:50px_50px]" />
             </div>
@@ -345,7 +452,7 @@ export default function CyberHighwayPage() {
                 HIGHWAY
               </h1>
               <p className="text-cyan-400/70 mt-4 text-sm">
-                {language === 'uz' ? 'Kiber xavfsizlik o\'yini' : 'Cybersecurity Racing Game'}
+                {language === 'uz' ? 'Mashinani to\'g\'ri yo\'lga buring!' : 'Steer to the correct lane!'}
               </p>
             </motion.div>
 
@@ -456,6 +563,21 @@ export default function CyberHighwayPage() {
               </div>
             </div>
 
+            {/* Question display */}
+            {gameState === 'question' && currentQuestion && (
+              <div className="absolute top-24 left-4 right-4 z-20">
+                <motion.div
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="bg-black/70 backdrop-blur-md rounded-xl p-4 border border-cyan-500/30"
+                >
+                  <h3 className="text-sm font-bold text-center text-cyan-400">
+                    {language === 'uz' ? currentQuestion.questionUz : currentQuestion.question}
+                  </h3>
+                </motion.div>
+              </div>
+            )}
+
             {/* Boss Warning */}
             {gameState === 'boss' && (
               <motion.div
@@ -482,86 +604,52 @@ export default function CyberHighwayPage() {
               </motion.div>
             )}
 
-            {/* Question Card */}
-            {gameState === 'question' && currentQuestion && (
+            {/* Result feedback */}
+            {(gameState === 'correct' || gameState === 'wrong') && (
               <motion.div
-                initial={{ y: 100, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="absolute bottom-0 left-0 right-0 p-4 z-20"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30"
               >
-                <div className="bg-black/80 backdrop-blur-md rounded-2xl p-4 border border-cyan-500/30">
-                  <h3 className="text-lg font-bold text-center mb-4 text-cyan-400">
-                    {language === 'uz' ? currentQuestion.questionUz : currentQuestion.question}
-                  </h3>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    {currentQuestion.options.slice(0, 3).map((option, i) => (
-                      <motion.button
-                        key={option.id}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleAnswer(option.id)}
-                        className={`p-3 rounded-xl text-sm font-medium transition-all ${
-                          i === 0 
-                            ? 'bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500' 
-                            : i === 1 
-                            ? 'bg-gradient-to-b from-cyan-600 to-cyan-800 hover:from-cyan-500' 
-                            : 'bg-gradient-to-b from-pink-600 to-pink-800 hover:from-pink-500'
-                        }`}
-                      >
-                        {language === 'uz' ? option.textUz : option.text}
-                      </motion.button>
-                    ))}
+                {gameState === 'correct' ? (
+                  <div className="text-center">
+                    <div className="text-6xl mb-2">✅</div>
+                    <div className="text-green-400 font-black text-2xl">
+                      {language === 'uz' ? 'TO\'G\'RI!' : 'CORRECT!'}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="text-6xl mb-2">❌</div>
+                    <div className="text-red-400 font-black text-2xl">
+                      {language === 'uz' ? 'XATO!' : 'WRONG!'}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 
-            {/* Correct Answer Feedback */}
-            {gameState === 'correct' && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
-              >
-                <div className="text-center">
-                  <motion.div
-                    animate={{ scale: [1, 1.3, 1] }}
-                    transition={{ duration: 0.3 }}
-                    className="text-6xl text-green-400 font-black drop-shadow-[0_0_20px_rgba(74,222,128,0.8)]"
+            {/* Mobile lane buttons */}
+            <div className="absolute bottom-4 left-4 right-4 z-20">
+              <div className="grid grid-cols-3 gap-2">
+                {['← Chap', '↑ O\'rta', '→ O\'ng'].map((label, index) => (
+                  <button
+                    key={index}
+                    onClick={() => selectLane(index)}
+                    disabled={gameState !== 'question' || isSelecting || showResult}
+                    className={`py-3 rounded-lg font-bold transition-all text-sm ${
+                      gameState !== 'question' || isSelecting || showResult
+                        ? 'bg-slate-800/50 text-slate-500'
+                        : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 hover:bg-cyan-500/30 active:scale-95'
+                    }`}
                   >
-                    SYSTEM SECURED
-                  </motion.div>
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="text-2xl text-cyan-400 mt-2"
-                  >
-                    +{10 + Math.floor((combo - 1) * 2)} XP
-                  </motion.div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Wrong Answer Feedback */}
-            {gameState === 'wrong' && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none bg-red-900/30"
-              >
-                <div className="text-center">
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 0.3 }}
-                    className="text-5xl text-red-500 font-black drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
-                  >
-                    DATA BREACH!
-                  </motion.div>
-                  <p className="text-red-400 mt-2">-1 ❤️</p>
-                </div>
-              </motion.div>
-            )}
+                    {language === 'uz' 
+                      ? label 
+                      : ['← Left', '↑ Middle', '→ Right'][index]}
+                  </button>
+                ))}
+              </div>
+            </div>
           </motion.div>
         )}
 
@@ -572,69 +660,54 @@ export default function CyberHighwayPage() {
             animate={{ opacity: 1 }}
             className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-gradient-to-b from-[#0a0015] via-[#1a0030] to-[#0d001a] p-6"
           >
-            {/* Confetti */}
-            {[...Array(30)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ y: -20, x: Math.random() * 400 - 200, opacity: 1 }}
-                animate={{ y: 800, rotate: 360 * (Math.random() > 0.5 ? 1 : -1) }}
-                transition={{ duration: 3 + Math.random() * 2, repeat: Infinity, delay: Math.random() }}
-                className="absolute top-0 w-3 h-3 rounded-full"
-                style={{ backgroundColor: ['#00ffff', '#ff00ff', '#ffff00', '#00ff00'][Math.floor(Math.random() * 4)] }}
-              />
-            ))}
-
             <motion.div
               initial={{ scale: 0 }}
-              animate={{ scale: [0, 1.2, 1] }}
-              transition={{ duration: 0.5 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', delay: 0.2 }}
               className="text-8xl mb-4"
             >
               🏆
             </motion.div>
+            
+            <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-2">
+              {language === 'uz' ? 'G\'ALABA!' : 'VICTORY!'}
+            </h2>
 
-            <motion.h1
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-4xl font-black text-center bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-6"
-            >
-              {language === 'uz' ? 'MISSIYA TUGADI!' : 'MISSION COMPLETE!'}
-            </motion.h1>
-
-            <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-6 w-full max-w-xs space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">{language === 'uz' ? 'Yig\'ilgan XP' : 'XP Earned'}</span>
-                <span className="text-2xl font-bold text-cyan-400">{xp}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">{language === 'uz' ? 'To\'g\'ri javoblar' : 'Correct'}</span>
-                <span className="text-xl font-bold text-green-400">{correctAnswers}/{questions.length}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">{language === 'uz' ? 'Max Combo' : 'Max Combo'}</span>
-                <span className="text-xl font-bold text-orange-400">{maxCombo}x</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">{language === 'uz' ? 'Aniqlik' : 'Accuracy'}</span>
-                <span className="text-xl font-bold text-purple-400">
-                  {Math.round((correctAnswers / questions.length) * 100)}%
-                </span>
+            <div className="bg-black/50 backdrop-blur-md rounded-2xl p-6 mt-6 w-full max-w-xs border border-cyan-500/30">
+              <div className="text-center space-y-4">
+                <div>
+                  <div className="text-4xl font-black text-cyan-400">{xp} XP</div>
+                  <div className="text-sm text-cyan-400/70">{language === 'uz' ? 'Jami ball' : 'Total Score'}</div>
+                </div>
+                <div className="flex justify-around text-sm">
+                  <div>
+                    <div className="text-2xl font-bold text-green-400">{correctAnswers}</div>
+                    <div className="text-green-400/70">{language === 'uz' ? 'To\'g\'ri' : 'Correct'}</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-purple-400">{maxCombo}x</div>
+                    <div className="text-purple-400/70">{language === 'uz' ? 'Max Combo' : 'Max Combo'}</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-red-400">{lives}</div>
+                    <div className="text-red-400/70">{language === 'uz' ? 'Jon' : 'Lives'}</div>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="flex gap-4 mt-8">
               <button
-                onClick={() => startGame(difficulty)}
-                className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl font-bold hover:scale-105 transition-all"
+                onClick={() => setGameState('difficulty')}
+                className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
               >
                 {language === 'uz' ? 'Qayta o\'ynash' : 'Play Again'}
               </button>
               <Link
                 href="/gamification"
-                className="px-8 py-3 bg-white/10 rounded-xl font-bold hover:bg-white/20 transition-all"
+                className="px-8 py-3 bg-slate-800 rounded-xl font-bold hover:bg-slate-700 transition-all"
               >
-                {language === 'uz' ? 'Chiqish' : 'Exit'}
+                {language === 'uz' ? 'Orqaga' : 'Back'}
               </Link>
             </div>
           </motion.div>
@@ -645,48 +718,45 @@ export default function CyberHighwayPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-gradient-to-b from-[#150005] via-[#1a0010] to-[#0d0005] p-6"
+            className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-gradient-to-b from-[#0a0015] via-[#1a0030] to-[#0d001a] p-6"
           >
             <motion.div
-              animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', delay: 0.2 }}
               className="text-8xl mb-4"
             >
-              💀
+              💔
             </motion.div>
+            
+            <h2 className="text-4xl font-black text-red-500 mb-2">
+              {language === 'uz' ? 'O\'YIN TUGADI' : 'GAME OVER'}
+            </h2>
 
-            <h1 className="text-4xl font-black text-red-500 mb-2">
-              GAME OVER
-            </h1>
-            <p className="text-red-400/70 text-center mb-6">
-              {language === 'uz' 
-                ? 'Hacker g\'alaba qildi! Qayta urinib ko\'ring.' 
-                : 'The hacker won! Try again.'}
-            </p>
-
-            <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-6 w-full max-w-xs space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">{language === 'uz' ? 'Yig\'ilgan XP' : 'XP Earned'}</span>
-                <span className="text-xl font-bold text-cyan-400">{xp}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">{language === 'uz' ? 'To\'g\'ri javoblar' : 'Correct'}</span>
-                <span className="text-xl font-bold text-green-400">{correctAnswers}</span>
+            <div className="bg-black/50 backdrop-blur-md rounded-2xl p-6 mt-6 w-full max-w-xs border border-red-500/30">
+              <div className="text-center space-y-4">
+                <div>
+                  <div className="text-4xl font-black text-cyan-400">{xp} XP</div>
+                  <div className="text-sm text-cyan-400/70">{language === 'uz' ? 'Jami ball' : 'Total Score'}</div>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {questionIndex}/{questions.length} {language === 'uz' ? 'savol' : 'questions'}
+                </div>
               </div>
             </div>
 
             <div className="flex gap-4 mt-8">
               <button
-                onClick={() => startGame(difficulty)}
-                className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-600 rounded-xl font-bold hover:scale-105 transition-all"
+                onClick={() => setGameState('difficulty')}
+                className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
               >
                 {language === 'uz' ? 'Qayta urinish' : 'Try Again'}
               </button>
               <Link
                 href="/gamification"
-                className="px-8 py-3 bg-white/10 rounded-xl font-bold hover:bg-white/20 transition-all"
+                className="px-8 py-3 bg-slate-800 rounded-xl font-bold hover:bg-slate-700 transition-all"
               >
-                {language === 'uz' ? 'Chiqish' : 'Exit'}
+                {language === 'uz' ? 'Orqaga' : 'Back'}
               </Link>
             </div>
           </motion.div>

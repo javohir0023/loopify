@@ -25,9 +25,9 @@ export default function RoadGamePage() {
   const [score, setScore] = useState(0);
   const [carPosition, setCarPosition] = useState(1); // 0 = left, 1 = middle, 2 = right
   const [isAnimating, setIsAnimating] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [gameQuestions, setGameQuestions] = useState<GameQuestion[]>([]);
+  const [roadOffset, setRoadOffset] = useState(0);
 
   // Shuffle and select 10 random questions
   const initializeGame = useCallback(() => {
@@ -37,7 +37,7 @@ export default function RoadGamePage() {
       .map(q => ({
         question: q.question,
         questionUz: q.questionUz,
-        options: q.options.slice(0, 3), // Only take first 3 options for the game
+        options: q.options.slice(0, 3),
       }));
     setGameQuestions(shuffled);
   }, []);
@@ -46,26 +46,52 @@ export default function RoadGamePage() {
     initializeGame();
   }, [initializeGame]);
 
+  // Road animation
+  useEffect(() => {
+    if (gameState === 'playing' && !showResult) {
+      const interval = setInterval(() => {
+        setRoadOffset(prev => (prev + 2) % 40);
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [gameState, showResult]);
+
   const startGame = () => {
     setGameState('playing');
     setLives(3);
     setCurrentQuestionIndex(0);
     setScore(0);
     setCarPosition(1);
-    setSelectedAnswer(null);
     setShowResult(false);
     initializeGame();
   };
 
-  const handleAnswer = (optionIndex: number) => {
+  // Handle keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameState !== 'playing' || isAnimating || showResult) return;
+      
+      if (e.key === 'ArrowLeft' || e.key === 'a') {
+        selectLane(0);
+      } else if (e.key === 'ArrowUp' || e.key === 'w') {
+        selectLane(1);
+      } else if (e.key === 'ArrowRight' || e.key === 'd') {
+        selectLane(2);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState, isAnimating, showResult, gameQuestions, currentQuestionIndex, lives]);
+
+  const selectLane = (laneIndex: number) => {
     if (isAnimating || showResult) return;
     
     setIsAnimating(true);
-    setCarPosition(optionIndex);
-    setSelectedAnswer(gameQuestions[currentQuestionIndex].options[optionIndex].id);
+    setCarPosition(laneIndex);
     
     setTimeout(() => {
-      const isCorrect = gameQuestions[currentQuestionIndex].options[optionIndex].isCorrect;
+      const isCorrect = gameQuestions[currentQuestionIndex].options[laneIndex]?.isCorrect;
       setShowResult(true);
       
       if (isCorrect) {
@@ -82,7 +108,6 @@ export default function RoadGamePage() {
         } else {
           setCurrentQuestionIndex(prev => prev + 1);
           setCarPosition(1);
-          setSelectedAnswer(null);
           setShowResult(false);
         }
         setIsAnimating(false);
@@ -120,17 +145,17 @@ export default function RoadGamePage() {
             </h2>
             <p className="text-muted-foreground">
               {language === 'uz' 
-                ? 'Savolga to\'g\'ri javob berib, yo\'ldan chiqmang! 3 ta joningiz bor. Oxirigacha yetib boring va +50 XP oling!'
-                : 'Answer correctly to stay on the road! You have 3 lives. Reach the end and earn +50 XP!'}
+                ? 'Mashinani to\'g\'ri yo\'lga buring! 3 ta joningiz bor.'
+                : 'Steer the car to the correct lane! You have 3 lives.'}
             </p>
             
             <GradientCard className="p-4 text-left">
               <h3 className="font-semibold mb-2">{language === 'uz' ? 'Qoidalar:' : 'Rules:'}</h3>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• {language === 'uz' ? '3 ta variant - 3 ta yo\'l' : '3 options - 3 roads'}</li>
-                <li>• {language === 'uz' ? 'To\'g\'ri javob = davom etasiz' : 'Correct answer = continue'}</li>
-                <li>• {language === 'uz' ? 'Xato javob = 1 jon ketadi' : 'Wrong answer = lose 1 life'}</li>
-                <li>• {language === 'uz' ? '10 ta savol - +50 XP mukofot' : '10 questions - +50 XP reward'}</li>
+                <li>• {language === 'uz' ? 'Chap yo\'l = chap variant' : 'Left lane = left option'}</li>
+                <li>• {language === 'uz' ? 'O\'rta yo\'l = o\'rta variant' : 'Middle lane = middle option'}</li>
+                <li>• {language === 'uz' ? 'O\'ng yo\'l = o\'ng variant' : 'Right lane = right option'}</li>
+                <li>• {language === 'uz' ? 'Klaviatura: A/←, W/↑, D/→' : 'Keyboard: A/←, W/↑, D/→'}</li>
               </ul>
             </GradientCard>
             
@@ -167,80 +192,123 @@ export default function RoadGamePage() {
               </p>
             </GradientCard>
 
-            {/* Road Animation */}
-            <div className="relative h-48 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg overflow-hidden">
-              {/* Road lines */}
-              <div className="absolute inset-0 flex justify-around">
-                <div className="w-1 bg-yellow-500/50 h-full animate-pulse"></div>
-                <div className="w-1 bg-yellow-500/50 h-full animate-pulse"></div>
+            {/* Road with Options */}
+            <div className="relative h-72 bg-gradient-to-b from-slate-600 to-slate-800 rounded-lg overflow-hidden">
+              {/* Moving road lines */}
+              <div className="absolute inset-0">
+                {[...Array(8)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute left-1/2 -translate-x-1/2 w-3 h-10 bg-yellow-400/70"
+                    style={{
+                      top: `${((roadOffset + i * 40) % 320) - 40}px`,
+                    }}
+                  />
+                ))}
               </div>
               
-              {/* Lanes */}
-              <div className="absolute bottom-0 left-0 right-0 flex">
-                {currentQuestion.options.map((_, index) => {
-                  const isCorrect = currentQuestion.options[index].isCorrect;
+              {/* Lane dividers */}
+              <div className="absolute top-0 bottom-0 left-[33%] w-1 border-l-4 border-dashed border-white/30" />
+              <div className="absolute top-0 bottom-0 left-[66%] w-1 border-l-4 border-dashed border-white/30" />
+              
+              {/* Options on road (in front of car) */}
+              <div className="absolute top-8 left-0 right-0 flex">
+                {currentQuestion.options.map((option, index) => {
+                  const isCorrect = option.isCorrect;
                   const isSelected = carPosition === index && showResult;
                   
                   return (
-                    <div 
-                      key={index}
-                      className={`flex-1 h-48 border-x border-white/20 transition-all duration-300 ${
-                        isSelected 
-                          ? isCorrect 
-                            ? 'bg-green-500/30' 
-                            : 'bg-red-500/30'
-                          : ''
+                    <button
+                      key={option.id}
+                      onClick={() => selectLane(index)}
+                      disabled={isAnimating || showResult}
+                      className={`flex-1 mx-1 py-3 px-2 rounded-lg text-xs font-bold transition-all ${
+                        showResult
+                          ? isCorrect
+                            ? 'bg-green-500 text-white shadow-lg shadow-green-500/50'
+                            : isSelected
+                              ? 'bg-red-500 text-white shadow-lg shadow-red-500/50 animate-pulse'
+                              : 'bg-slate-700/80 text-slate-300'
+                          : 'bg-slate-900/90 text-white hover:bg-slate-800 border-2 border-cyan-500/50 hover:border-cyan-400'
                       }`}
                     >
-                      {showResult && !isCorrect && carPosition === index && (
-                        <div className="absolute top-4 left-1/2 -translate-x-1/2 text-4xl animate-bounce">
-                          💥
-                        </div>
-                      )}
-                    </div>
+                      <div className="truncate">
+                        {language === 'uz' ? option.textUz : option.text}
+                      </div>
+                    </button>
                   );
                 })}
               </div>
               
+              {/* Lane highlight on selection */}
+              <div className="absolute top-0 bottom-0 left-0 right-0 flex pointer-events-none">
+                {[0, 1, 2].map((lane) => (
+                  <div 
+                    key={lane}
+                    className={`flex-1 transition-all duration-300 ${
+                      showResult && carPosition === lane
+                        ? currentQuestion.options[lane]?.isCorrect
+                          ? 'bg-green-500/20'
+                          : 'bg-red-500/30'
+                        : ''
+                    }`}
+                  />
+                ))}
+              </div>
+              
+              {/* Crash effect */}
+              {showResult && !currentQuestion.options[carPosition]?.isCorrect && (
+                <div 
+                  className="absolute text-5xl animate-bounce"
+                  style={{ 
+                    left: `${(carPosition * 33.33) + 16.66}%`,
+                    transform: 'translateX(-50%)',
+                    top: '40%'
+                  }}
+                >
+                  💥
+                </div>
+              )}
+              
               {/* Car */}
               <div 
-                className="absolute bottom-4 transition-all duration-500 ease-out"
+                className="absolute bottom-8 transition-all duration-300 ease-out"
                 style={{ 
                   left: `${(carPosition * 33.33) + 16.66}%`,
                   transform: 'translateX(-50%)'
                 }}
               >
-                <div className={`text-4xl ${isAnimating ? 'animate-bounce' : ''}`}>
+                <div className={`text-5xl ${isAnimating ? 'animate-bounce' : ''}`}>
                   🚗
                 </div>
               </div>
+
+              {/* Control hints */}
+              <div className="absolute bottom-2 left-0 right-0 flex justify-around text-xs text-white/50">
+                <span>← A</span>
+                <span>↑ W</span>
+                <span>→ D</span>
+              </div>
             </div>
 
-            {/* Answer Options */}
+            {/* Mobile lane buttons */}
             <div className="grid grid-cols-3 gap-2">
-              {currentQuestion.options.map((option, index) => {
-                const isCorrect = option.isCorrect;
-                const isSelected = selectedAnswer === option.id;
-                
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => handleAnswer(index)}
-                    disabled={isAnimating || showResult}
-                    className={`p-3 rounded-lg border-2 transition-all text-sm font-medium ${
-                      showResult
-                        ? isCorrect
-                          ? 'border-green-500 bg-green-500/20 text-green-400'
-                          : isSelected
-                            ? 'border-red-500 bg-red-500/20 text-red-400'
-                            : 'border-border bg-card text-muted-foreground'
-                        : 'border-border bg-card text-foreground hover:border-primary hover:bg-primary/10'
-                    } ${isAnimating ? 'cursor-not-allowed' : ''}`}
-                  >
-                    {language === 'uz' ? option.textUz : option.text}
-                  </button>
-                );
-              })}
+              {['← Chap', '↑ O\'rta', '→ O\'ng'].map((label, index) => (
+                <button
+                  key={index}
+                  onClick={() => selectLane(index)}
+                  disabled={isAnimating || showResult}
+                  className={`py-3 rounded-lg font-bold transition-all ${
+                    isAnimating || showResult
+                      ? 'bg-muted text-muted-foreground'
+                      : 'bg-primary/20 text-primary hover:bg-primary/30 active:scale-95'
+                  }`}
+                >
+                  {language === 'uz' 
+                    ? label 
+                    : ['← Left', '↑ Middle', '→ Right'][index]}
+                </button>
+              ))}
             </div>
           </div>
         )}
