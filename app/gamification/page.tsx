@@ -12,6 +12,17 @@ type TabType = 'daily' | 'games' | 'quizzes' | 'projects' | 'leaderboard';
 const GAMES = [
   {
     id: 1,
+    title: 'Cyber Highway',
+    titleUz: 'Cyber Highway',
+    description: 'Cyberpunk racing game with quiz questions',
+    descriptionUz: 'Kiber xavfsizlik poyga o\'yini',
+    icon: '🏎️',
+    xp: 50,
+    href: '/cyber-highway',
+    featured: true,
+  },
+  {
+    id: 2,
     title: 'Road Game',
     titleUz: 'Yo\'l O\'yini',
     description: 'Answer quiz questions to stay on the road',
