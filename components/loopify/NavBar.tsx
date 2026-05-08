@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Home', labelUz: 'Bosh sahifa', href: '/', icon: '🏠' },
   { label: 'Learn', labelUz: "O'quv", href: '/learning', icon: '📚' },
   { label: 'Quiz', labelUz: 'Quizlar', href: '/quiz', icon: '📝' },
+  { label: 'Challenges', labelUz: 'Tanlovlar', href: '/gamification', icon: '🎮' },
   { label: 'Community', labelUz: 'Jamoa', href: '/community', icon: '👥' },
   { label: 'Chat', labelUz: 'Chat', href: '/chat', icon: '💬' },
 ];
