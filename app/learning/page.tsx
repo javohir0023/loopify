@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useLanguage } from '@/lib/language-context';
 import { GradientCard } from '@/components/loopify/GradientCard';
 import { GlowButton } from '@/components/loopify/GlowButton';
@@ -16,6 +17,7 @@ const COURSES = [
     nextLesson: 'Funktsiyalar va usullar',
     quizzes: 2,
     completedQuizzes: 1,
+    slug: 'python',
   },
   {
     id: 2,
@@ -26,6 +28,7 @@ const COURSES = [
     nextLesson: 'CSS Flexbox',
     quizzes: 3,
     completedQuizzes: 2,
+    slug: 'web',
   },
   {
     id: 3,
@@ -36,6 +39,18 @@ const COURSES = [
     nextLesson: 'Massivlar va Ro\'yxatlar',
     quizzes: 2,
     completedQuizzes: 0,
+    slug: 'data-structures',
+  },
+  {
+    id: 4,
+    title: 'Kiber Xavfsizlik',
+    progress: 0,
+    lessons: 8,
+    completed: 0,
+    nextLesson: 'Kuchli Parol va Fishing Hujumlaridan Himoyalanish',
+    quizzes: 1,
+    completedQuizzes: 0,
+    slug: 'cybersecurity',
   },
 ];
 
@@ -82,9 +97,11 @@ export default function LearningPage() {
                   <p className="text-xs text-muted-foreground">
                     {language === 'uz' ? 'Keyingi:' : 'Next:'} <span className="text-foreground font-medium">{course.nextLesson}</span>
                   </p>
-                  <GlowButton size="sm" onClick={() => setExpandedCourse(expandedCourse === course.id ? null : course.id)}>
-                    {course.completed > 0 ? (language === 'uz' ? 'Davom et' : 'Continue') : (language === 'uz' ? 'Boshlash' : 'Start')}
-                  </GlowButton>
+                  <Link href={`/learning/${course.slug}`}>
+                    <GlowButton size="sm">
+                      {course.completed > 0 ? (language === 'uz' ? 'Davom et' : 'Continue') : (language === 'uz' ? 'Boshlash' : 'Start')}
+                    </GlowButton>
+                  </Link>
                 </div>
               </div>
             </GradientCard>
