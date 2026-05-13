@@ -82,6 +82,28 @@
   }
 }
 
+/* Moon mode theme */
+html.moon-mode {
+  --background: #07111f;
+  --foreground: #e2e8f0;
+  --card: #0f172a;
+  --card-foreground: #e2e8f0;
+  --primary: #38bdf8;
+  --primary-foreground: #07111f;
+  --secondary: #818cf8;
+  --secondary-foreground: #e2e8f0;
+  --accent: #38bdf8;
+  --accent-foreground: #07111f;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #1e293b;
+  --input: #0f172a;
+  --ring: #38bdf8;
+  --glow-pink: #38bdf8;
+  --glow-purple: #818cf8;
+  --glow-blue: #38bdf8;
+}
+
 /* Loopify-specific animations and effects */
 @keyframes glow-pulse {
   0%, 100% {
@@ -89,6 +111,15 @@
   }
   50% {
     box-shadow: 0 0 30px rgba(236, 72, 153, 0.8);
+  }
+}
+
+html.moon-mode @keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.8);
   }
 }
 

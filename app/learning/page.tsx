@@ -52,6 +52,17 @@ const COURSES = [
     completedQuizzes: 0,
     slug: 'cybersecurity',
   },
+  {
+    id: 5,
+    title: 'Kompyuter savodxonligi',
+    progress: 0,
+    lessons: 10,
+    completed: 0,
+    nextLesson: 'Kompyuter va uning qismlari',
+    quizzes: 2,
+    completedQuizzes: 0,
+    slug: 'computer-literacy',
+  },
 ];
 
 export default function LearningPage() {
