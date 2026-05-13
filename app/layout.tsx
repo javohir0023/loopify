@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { OnboardingProvider } from '@/lib/onboarding-context'
 import { UserProvider } from '@/lib/user-context'
 import { LanguageProvider } from '@/lib/language-context'
+import { ThemeProvider } from '@/lib/theme-context'
 import { NavBar } from '@/components/loopify/NavBar'
 import './globals.css'
 
@@ -41,14 +42,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased bg-background text-foreground min-h-screen">
-        <LanguageProvider>
-          <OnboardingProvider>
-            <UserProvider>
-              {children}
-              <NavBar />
-            </UserProvider>
-          </OnboardingProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <OnboardingProvider>
+              <UserProvider>
+                {children}
+                <NavBar />
+              </UserProvider>
+            </OnboardingProvider>
+          </LanguageProvider>
+        </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
